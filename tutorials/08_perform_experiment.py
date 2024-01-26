@@ -3,8 +3,10 @@ import time
 import warnings
 import mlflow
 
+sys.path.append("/Users/chengjiaying/scikit-activeml/")
+warnings.filterwarnings("ignore")
+
 import numpy as np
-import matplotlib.pyplot as plt
 
 from sklearn.linear_model import LogisticRegression
 
@@ -15,16 +17,14 @@ from skactiveml.utils import call_func, MISSING_LABEL
 import argparse
 from tqdm import tqdm
 
-sys.path.append("../")
-warnings.filterwarnings("ignore")
-
-def parse_args():
-    parse = argparse.ArgumentParser(description='Evaluate model performance')
-    parse.add_argument('dataset', type=str, help='name of dataset')
-    parse.add_argument('qs_name', type=str, help='name of query strategy')
-    parse.add_argument('batch_size', type=int, help='batch size')
-    parse.add_argument('n_cycles', type=int, help='number of cycles')
-    parse.add_argument('seed', type=int, help='random seed')
+def parse_argument():
+    parser = argparse.ArgumentParser(description='Evaluate model performance')
+    parser.add_argument('dataset', type=str, help='name of dataset')
+    parser.add_argument('qs_name', type=str, help='name of query strategy')
+    parser.add_argument('batch_size', type=int, help='batch size')
+    parser.add_argument('n_cycles', type=int, help='number of cycles')
+    parser.add_argument('seed', type=int, help='random seed')
+    return parser
 
 def gen_seed(random_state:np.random.RandomState):
     return random_state.randint(0, 2**31)
@@ -43,12 +43,14 @@ def load_embedding_dataset(name):
     return X_train, y_train_true, X_test, y_test_true
 
 if __name__ == '__main__':
-    args = parse_args()
+    parser = parse_argument()
+    args = parser.parse_args()
     dataset_name = args.dataset
     qs_name = args.qs_name
     batch_size = args.batch_size
     n_cycles = args.n_cycles
-    master_random_state = args.seed
+    seed = args.seed
+    master_random_state = np.random.RandomState(seed)
 
     X_train, y_train_true, X_test, y_test_true = load_embedding_dataset(dataset_name)
 
@@ -75,10 +77,10 @@ if __name__ == '__main__':
     y_train = np.full(shape=y_train_true.shape, fill_value=MISSING_LABEL)
     clf.fit(X_train, y_train)
 
-    mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
+    mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
     mlflow.set_experiment("Evaluation-Active Learning")
 
-    with mlflow.start_run():
+    with (mlflow.start_run()):
         for c in tqdm(range(n_cycles), desc=f'{qs_name} for {dataset_name}'):
             start = time.time()
             query_idx = call_func(qs.query, X=X_train, y=y_train, batch_size=1, clf=clf, discriminator=clf)
@@ -86,11 +88,16 @@ if __name__ == '__main__':
             y_train[query_idx] = y_train_true[query_idx]
             clf.fit(X_train, y_train)
             score = clf.score(X_test, y_test_true)
-            mlflow.log_metric('score', score)
-            mlflow.log_metric('time', end-start)
-            mlflow.set_tag('dataset', dataset_name)
-            mlflow.set_tag('qs', qs_name)
-            mlflow.set_tag('batch_size', batch_size)
-            mlflow.set_tag('n_cycles', n_cycles)
-            mlflow.set_tag('seed', master_random_state)
-            mlflow.set_tag('cycle', c)
+            mlflow.log_metric(key='score', value=score, step=c)
+            mlflow.log_metric(key='time', value=end-start, step=c)
+            tags = {
+                'dataset': dataset_name,
+                'qs': qs_name,
+                'batch_size': batch_size,
+                'n_cycles': n_cycles,
+                'seed': seed,
+                'step': c,
+            }
+            mlflow.set_tags(tags)
+
+

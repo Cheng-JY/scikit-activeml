@@ -77,8 +77,8 @@ if __name__ == "__main__":
     np.save('./embedding_data/cifar100_dinov2B_y_test.npy', cifar100_y_test_true)
 
     # Flowers-102
-    flowers102_X_train, flowers102_y_train_true = load_and_process_dataset("Flowers102", "./data", 102, True)
-    flowers102_X_test, flowers102_y_test_true = load_and_process_dataset("Flowers102", "./data", 102, False)
+    flowers102_X_train, flowers102_y_train_true = load_and_process_dataset("Flowers102", "./data",  True)
+    flowers102_X_test, flowers102_y_test_true = load_and_process_dataset("Flowers102", "./data",  False)
 
     np.save('./embedding_data/flowers102_dinov2B_X_train.npy', flowers102_X_train)
     np.save('./embedding_data/flowers102_dinov2B_y_train.npy', flowers102_y_train_true)
