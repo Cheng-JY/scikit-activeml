@@ -8,7 +8,9 @@ mlp.rcParams["figure.facecolor"] = "white"
 warnings.filterwarnings("ignore")
 
 if __name__ == "__main__":
-    #mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
+    # mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
+    mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
+
     experiment = mlflow.get_experiment_by_name("Evaluation-Active Learning")
     df = mlflow.search_runs(experiment_ids=experiment.experiment_id, output_format="pandas")
 

@@ -4,7 +4,7 @@ import warnings
 import mlflow
 
 #sys.path.append("/Users/chengjiaying/scikit-activeml/")
-sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/)
+sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
 warnings.filterwarnings("ignore")
 
 import numpy as np
