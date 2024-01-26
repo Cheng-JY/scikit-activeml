@@ -3,7 +3,7 @@ import time
 import warnings
 import mlflow
 
-sys.path.append("/Users/chengjiaying/scikit-activeml/")
+sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/)
 warnings.filterwarnings("ignore")
 
 import numpy as np
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     y_train = np.full(shape=y_train_true.shape, fill_value=MISSING_LABEL)
     clf.fit(X_train, y_train)
 
-    mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
+    mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
     mlflow.set_experiment("Evaluation-Active Learning")
 
     with (mlflow.start_run()):
