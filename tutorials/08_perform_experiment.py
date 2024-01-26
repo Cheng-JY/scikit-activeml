@@ -86,5 +86,11 @@ if __name__ == '__main__':
             y_train[query_idx] = y_train_true[query_idx]
             clf.fit(X_train, y_train)
             score = clf.score(X_test, y_test_true)
-            mlflow.log_metric(f'{dataset_name}-{qs_name}-{batch_size}-{n_cycles}-{master_random_state}-{c}-score', score)
-            mlflow.log_metric(f'{dataset_name}-{qs_name}-{batch_size}-{n_cycles}-{master_random_state}-{c}-score', end-start)
+            mlflow.log_metric('score', score)
+            mlflow.log_metric('time', end-start)
+            mlflow.set_tag('dataset', dataset_name)
+            mlflow.set_tag('qs', qs_name)
+            mlflow.set_tag('batch_size', batch_size)
+            mlflow.set_tag('n_cycles', n_cycles)
+            mlflow.set_tag('seed', master_random_state)
+            mlflow.set_tag('cycle', c)
