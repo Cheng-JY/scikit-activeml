@@ -1,0 +1,90 @@
+import sys
+import time
+import warnings
+import mlflow
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.linear_model import LogisticRegression
+
+from skactiveml.classifier import SklearnClassifier
+from skactiveml.pool import UncertaintySampling, RandomSampling, DiscriminativeAL, CoreSet, TypiClust, Badge
+from skactiveml.utils import call_func, MISSING_LABEL
+
+import argparse
+from tqdm import tqdm
+
+sys.path.append("../")
+warnings.filterwarnings("ignore")
+
+def parse_args():
+    parse = argparse.ArgumentParser(description='Evaluate model performance')
+    parse.add_argument('dataset', type=str, help='name of dataset')
+    parse.add_argument('qs_name', type=str, help='name of query strategy')
+    parse.add_argument('batch_size', type=int, help='batch size')
+    parse.add_argument('n_cycles', type=int, help='number of cycles')
+    parse.add_argument('seed', type=int, help='random seed')
+
+def gen_seed(random_state:np.random.RandomState):
+    return random_state.randint(0, 2**31)
+
+def gen_random_state(random_state:np.random.RandomState):
+    return np.random.RandomState(gen_seed(random_state))
+
+def create_query_strategy(name, random_state):
+    return query_strategy_factory_functions[name](random_state)
+
+def load_embedding_dataset(name):
+    X_train = np.load(f'./embedding_data/{name}_dinov2B_X_train.npy')
+    y_train_true = np.load(f'./embedding_data/{name}_dinov2B_y_train.npy')
+    X_test = np.load(f'./embedding_data/{name}_dinov2B_X_test.npy')
+    y_test_true = np.load(f'./embedding_data/{name}_dinov2B_y_test.npy')
+    return X_train, y_train_true, X_test, y_test_true
+
+if __name__ == '__main__':
+    args = parse_args()
+    dataset_name = args.dataset
+    qs_name = args.qs_name
+    batch_size = args.batch_size
+    n_cycles = args.n_cycles
+    master_random_state = args.seed
+
+    X_train, y_train_true, X_test, y_test_true = load_embedding_dataset(dataset_name)
+
+    dataset_classes = {
+        "cifar10": 10,
+        "cifar100": 100,
+        "flowers102": 102,
+    }
+    classes = dataset_classes[dataset_name]
+
+    clf = SklearnClassifier(LogisticRegression(), classes=np.arange(classes), random_state=gen_seed(master_random_state))
+
+    query_strategy_factory_functions = {
+        'RandomSampling': lambda random_state: RandomSampling(random_state=gen_seed(random_state)),
+        'UncertaintySampling': lambda random_state: UncertaintySampling(random_state=gen_seed(random_state)),
+        'DiscriminativeAL': lambda random_state: DiscriminativeAL(random_state=gen_seed(random_state)),
+        'CoreSet': lambda random_state: CoreSet(random_state=gen_seed(random_state)),
+        'TypiClust': lambda random_state: TypiClust(random_state=gen_seed(random_state)),
+        'Badge': lambda random_state: Badge(random_state=gen_seed(random_state))
+    }
+
+    qs = create_query_strategy(qs_name, random_state=gen_random_state(master_random_state))
+
+    y_train = np.full(shape=y_train_true.shape, fill_value=MISSING_LABEL)
+    clf.fit(X_train, y_train)
+
+    mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
+    mlflow.set_experiment("Evaluation-Active Learning")
+
+    with mlflow.start_run():
+        for c in tqdm(range(n_cycles), desc=f'{qs_name} for {dataset_name}'):
+            start = time.time()
+            query_idx = call_func(qs.query, X=X_train, y=y_train, batch_size=1, clf=clf, discriminator=clf)
+            end = time.time()
+            y_train[query_idx] = y_train_true[query_idx]
+            clf.fit(X_train, y_train)
+            score = clf.score(X_test, y_test_true)
+            mlflow.log_metric(f'{dataset_name}-{qs_name}-{batch_size}-{n_cycles}-{master_random_state}-{c}-score', score)
+            mlflow.log_metric(f'{dataset_name}-{qs_name}-{batch_size}-{n_cycles}-{master_random_state}-{c}-score', end-start)
