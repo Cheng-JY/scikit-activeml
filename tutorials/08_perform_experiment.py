@@ -37,6 +37,10 @@ def create_query_strategy(name, random_state):
     return query_strategy_factory_functions[name](random_state)
 
 def load_embedding_dataset(name):
+    # X_train = np.load('./embedding_data/flowers102_dinov2B_X_train.npy')
+    # y_train_true = np.load('./embedding_data/flowers102_dinov2B_y_train.npy')
+    # X_test = np.load('./embedding_data/flowers102_dinov2B_X_test.npy')
+    # y_test_true = np.load('./embedding_data/flowers102_dinov2B_y_test.npy')
     X_train = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_train.npy')
     y_train_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_train.npy')
     X_test = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_test.npy')
@@ -91,7 +95,6 @@ if __name__ == '__main__':
             y_train[query_idx] = y_train_true[query_idx]
             clf.fit(X_train, y_train)
             score = clf.score(X_test, y_test_true)
-            print(score)
             mlflow.log_metric(key='score', value=score, step=c)
             mlflow.log_metric(key='time', value=end-start, step=c)
             tags = {
