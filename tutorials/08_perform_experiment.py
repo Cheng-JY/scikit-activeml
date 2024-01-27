@@ -80,8 +80,8 @@ if __name__ == '__main__':
 
     #mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
     mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
-    exp = get_experiment_by_name("Evaluation-Active Learning")
-    experiment_id = create_experiment(name="Evaluation-Active Learning") if exp is None else exp.experiment_id
+    exp = mlflow.get_experiment_by_name("Evaluation-Active Learning")
+    experiment_id = mlflow.create_experiment(name="Evaluation-Active Learning") if exp is None else exp.experiment_id
 
     with (mlflow.start_run(experiment_id=experiment_id)):
         for c in tqdm(range(n_cycles), desc=f'{qs_name} for {dataset_name}'):
@@ -91,6 +91,7 @@ if __name__ == '__main__':
             y_train[query_idx] = y_train_true[query_idx]
             clf.fit(X_train, y_train)
             score = clf.score(X_test, y_test_true)
+            print(score)
             mlflow.log_metric(key='score', value=score, step=c)
             mlflow.log_metric(key='time', value=end-start, step=c)
             tags = {
