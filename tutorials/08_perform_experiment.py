@@ -2,6 +2,7 @@ import sys
 import time
 import warnings
 import mlflow
+import os
 
 #sys.path.append("/Users/chengjiaying/scikit-activeml/")
 sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
@@ -17,6 +18,7 @@ from skactiveml.utils import call_func, MISSING_LABEL
 
 import argparse
 from tqdm import tqdm
+import pandas as pd
 
 def parse_argument():
     parser = argparse.ArgumentParser(description='Evaluate model performance')
@@ -43,6 +45,21 @@ def load_embedding_dataset(name):
     y_test_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_test.npy')
     return X_train, y_train_true, X_test, y_test_true
 
+def save_in_csv():
+    data = {
+            'dataset': [dataset_name],
+            'qs': [qs_name],
+            'batch_size': [batch_size],
+            'n_cycles': [n_cycles],
+            'seed': [seed],
+            'step': [c],
+            'score': [score],
+            'time': [end-start]
+            }
+    df = pd.DataFrame(data=data)
+    output_path=f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
+    df.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
+    
 if __name__ == '__main__':
     parser = parse_argument()
     args = parser.parse_args()
@@ -103,5 +120,6 @@ if __name__ == '__main__':
                 'step': c,
             }
             mlflow.set_tags(tags)
+            save_in_csv()
 
 
