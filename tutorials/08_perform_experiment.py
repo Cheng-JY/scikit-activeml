@@ -4,8 +4,8 @@ import warnings
 import mlflow
 import os
 
-sys.path.append("/Users/chengjiaying/scikit-activeml/")
-#sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
+#sys.path.append("/Users/chengjiaying/scikit-activeml/")
+sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
 warnings.filterwarnings("ignore")
 
 import numpy as np
@@ -39,14 +39,14 @@ def create_query_strategy(name, random_state):
     return query_strategy_factory_functions[name](random_state)
 
 def load_embedding_dataset(name):
-    X_train = np.load('./embedding_data/flowers102_dinov2B_X_train.npy')
-    y_train_true = np.load('./embedding_data/flowers102_dinov2B_y_train.npy')
-    X_test = np.load('./embedding_data/flowers102_dinov2B_X_test.npy')
-    y_test_true = np.load('./embedding_data/flowers102_dinov2B_y_test.npy')
-    # X_train = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_train.npy')
-    # y_train_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_train.npy')
-    # X_test = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_test.npy')
-    # y_test_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_test.npy')
+    # X_train = np.load('./embedding_data/flowers102_dinov2B_X_train.npy')
+    # y_train_true = np.load('./embedding_data/flowers102_dinov2B_y_train.npy')
+    # X_test = np.load('./embedding_data/flowers102_dinov2B_X_test.npy')
+    # y_test_true = np.load('./embedding_data/flowers102_dinov2B_y_test.npy')
+    X_train = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_train.npy')
+    y_train_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_train.npy')
+    X_test = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_test.npy')
+    y_test_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_test.npy')
     return X_train, y_train_true, X_test, y_test_true
 
 def save_in_csv():
@@ -61,8 +61,8 @@ def save_in_csv():
             'time': [end-start]
             }
     df = pd.DataFrame(data=data)
-    #output_path=f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
-    output_path=f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
+    output_path=f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
+    #output_path=f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
     df.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
     
 if __name__ == '__main__':
@@ -100,8 +100,8 @@ if __name__ == '__main__':
     y_train = np.full(shape=y_train_true.shape, fill_value=MISSING_LABEL)
     clf.fit(X_train, y_train)
 
-    mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
-    #mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
+    #mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
+    mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
     exp = mlflow.get_experiment_by_name("Evaluation-Active Learning")
     experiment_id = mlflow.create_experiment(name="Evaluation-Active Learning") if exp is None else exp.experiment_id
 

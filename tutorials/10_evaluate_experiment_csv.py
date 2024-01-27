@@ -18,7 +18,8 @@ def parse_argument():
 
 def evaluate_experiment_csv_score(dataset_name):
     # load csx
-    input_path = f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
+    # input_path = f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
+    input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
     dataframe = pd.read_csv(input_path, index_col=0)
 
     query_strategy_names = dataframe['qs'].unique()
@@ -38,12 +39,14 @@ def evaluate_experiment_csv_score(dataset_name):
     plt.legend(loc='lower right')
     plt.xlabel('cycle')
     plt.ylabel('score')
-    output_path = f'{dataset_name}_score.png'
+    # output_path = f'{dataset_name}_score.png'
+    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result/{dataset_name}_score.png'
     plt.savefig(output_path)
 
 
 def evaluate_experiment_csv_time(dataset_name):
-    input_path = f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
+    # input_path = f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
+    input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
     dataframe = pd.read_csv(input_path, index_col=0)
 
     query_strategy_names = dataframe['qs'].unique()
@@ -57,13 +60,14 @@ def evaluate_experiment_csv_time(dataset_name):
         qs_result_t_std = qs_result_t['t_std'].to_numpy()
 
         plt.errorbar(np.arange(len(qs_result_t_mean)), qs_result_t_mean, qs_result_t_std,
-                     label=f"({qs_result_t_mean[-1]:.4f}) {qs_name}", alpha=0.5)
+                     label=f"({qs_result_t_mean[-1]:.4f}) {qs_name}", alpha=0.3)
 
     plt.title(dataset_name)
     plt.legend(loc='lower right')
     plt.xlabel('cycle')
     plt.ylabel('time')
-    output_path = f'{dataset_name}_time.png'
+    # output_path = f'{dataset_name}_time.png'
+    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result/{dataset_name}_time.png'
     plt.savefig(output_path)
 
 
