@@ -21,7 +21,7 @@ from tqdm import tqdm
 def parse_argument():
     parser = argparse.ArgumentParser(description='Evaluate model performance')
     parser.add_argument('dataset', type=str, help='name of dataset')
-    parser.add_argument('qs_name', type=str, help='name of query strategy')
+    parser.add_argument('query_strategy', type=str, help='name of query strategy')
     parser.add_argument('batch_size', type=int, help='batch size')
     parser.add_argument('n_cycles', type=int, help='number of cycles')
     parser.add_argument('seed', type=int, help='random seed')
@@ -37,17 +37,17 @@ def create_query_strategy(name, random_state):
     return query_strategy_factory_functions[name](random_state)
 
 def load_embedding_dataset(name):
-    X_train = np.load(f'./embedding_data/{name}_dinov2B_X_train.npy')
-    y_train_true = np.load(f'./embedding_data/{name}_dinov2B_y_train.npy')
-    X_test = np.load(f'./embedding_data/{name}_dinov2B_X_test.npy')
-    y_test_true = np.load(f'./embedding_data/{name}_dinov2B_y_test.npy')
+    X_train = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_train.npy')
+    y_train_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_train.npy')
+    X_test = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_test.npy')
+    y_test_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_test.npy')
     return X_train, y_train_true, X_test, y_test_true
 
 if __name__ == '__main__':
     parser = parse_argument()
     args = parser.parse_args()
     dataset_name = args.dataset
-    qs_name = args.qs_name
+    qs_name = args.query_strategy
     batch_size = args.batch_size
     n_cycles = args.n_cycles
     seed = args.seed
@@ -80,12 +80,13 @@ if __name__ == '__main__':
 
     #mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
     mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
-    mlflow.set_experiment("Evaluation-Active Learning")
+    exp = get_experiment_by_name("Evaluation-Active Learning")
+    experiment_id = create_experiment(name="Evaluation-Active Learning") if exp is None else exp.experiment_id
 
-    with (mlflow.start_run()):
+    with (mlflow.start_run(experiment_id=experiment_id)):
         for c in tqdm(range(n_cycles), desc=f'{qs_name} for {dataset_name}'):
             start = time.time()
-            query_idx = call_func(qs.query, X=X_train, y=y_train, batch_size=1, clf=clf, discriminator=clf)
+            query_idx = call_func(qs.query, X=X_train, y=y_train, batch_size=batch_size, clf=clf, discriminator=clf)
             end = time.time()
             y_train[query_idx] = y_train_true[query_idx]
             clf.fit(X_train, y_train)
