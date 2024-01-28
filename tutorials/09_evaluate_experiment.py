@@ -16,3 +16,4 @@ if __name__ == "__main__":
 
     df = df[['tags.dataset', 'tags.qs', 'tags.batch_size', 'tags.n_cycles', 'tags.seed', 'tags.step', 'metrics.score', 'metrics.time']]
     print(df)
+    print(df.shape)
