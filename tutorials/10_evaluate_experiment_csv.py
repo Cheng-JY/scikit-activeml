@@ -21,8 +21,10 @@ def evaluate_experiment_csv_score(dataset_name):
     # input_path = f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
     input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
     dataframe = pd.read_csv(input_path, index_col=0)
+    dataframe = dataframe.dropna()
 
     query_strategy_names = dataframe['qs'].unique()
+    print(query_strategy_names)
 
     result_score = dataframe.groupby(['qs', 'batch_size', 'n_cycles', 'step'])['score'].agg(['mean', 'std']).set_axis(
         ['s_mean', 's_std'], axis=1)
@@ -48,6 +50,7 @@ def evaluate_experiment_csv_time(dataset_name):
     # input_path = f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
     input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
     dataframe = pd.read_csv(input_path, index_col=0)
+    dataframe = dataframe.dropna()
 
     query_strategy_names = dataframe['qs'].unique()
 
