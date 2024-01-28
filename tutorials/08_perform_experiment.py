@@ -61,8 +61,8 @@ def save_in_csv():
             'time': [end-start]
             }
     df = pd.DataFrame(data=data)
-    output_path=f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
-    #output_path=f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
+    output_path=f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_{n_cycles}_csv.csv'
+    #output_path=f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_{n_cycles}_csv.csv'
     df.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
     
 if __name__ == '__main__':
