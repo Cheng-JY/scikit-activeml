@@ -14,5 +14,5 @@ if __name__ == "__main__":
     experiment = mlflow.get_experiment_by_name("Evaluation-Active Learning")
     df = mlflow.search_runs(experiment_ids=experiment.experiment_id, output_format="pandas")
 
-    for r_idx, r in df.iterrows():
-        print(r["metrics.score"])
+    df = df[['tags.dataset', 'tags.qs', 'tags.batch_size', 'tags.n_cycles', 'tags.seed', 'tags.step', 'metrics.score', 'metrics.time']]
+    print(df)
