@@ -7,22 +7,31 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from tqdm import tqdm
 
-sys.path.append("../")
+sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
 warnings.filterwarnings("ignore")
+
+import argparse
+
+def parse_argument():
+    parser = argparse.ArgumentParser(description='Preprocessing Data with DinoV2')
+    parser.add_argument('dataset', type=str, help='name of dataset')
+    return parser
 
 def load_and_process_dataset(dataset_name, root_dir, is_train):
     # Load the dataset
     if is_train:
         split = 'train'
     else:
-        split = 'val'
+        if dataset_name == "STL10":
+            split = 'test'
+        else:
+            split = 'val'
 
-    if dataset_name != "Flowers102":
+    if dataset_name != "Flowers102" and dataset_name != "STL10":
         dataset = datasets.__dict__[dataset_name](root=root_dir, train=is_train, download=True, transform=transforms)
-
-    if dataset_name == "Flowers102":
+    else:
         dataset = datasets.__dict__[dataset_name](root=root_dir, split=split, download=True, transform=transforms)
-
+        
     # Create a DataLoader
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=is_train, num_workers=2)
 
@@ -44,6 +53,10 @@ def load_and_process_dataset(dataset_name, root_dir, is_train):
     return X, y_true
 
 if __name__ == "__main__":
+    parser = parse_argument()
+    args = parser.parse_args()
+    dataset_name = args.dataset
+    
     # 1. Transformation
     transforms = transforms.Compose(
         [transforms.Resize(256),
@@ -58,29 +71,12 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     dinov2_vitb14.to(device)
 
-    # CIFAR-10
-    cifar10_X_train, cifar10_y_train_true = load_and_process_dataset("CIFAR10", "./data", True)
-    cifar10_X_test, cifar10_y_test_true = load_and_process_dataset("CIFAR10", "./data", False)
+    X_train, y_train_true = load_and_process_dataset(dataset_name, "./data", True)
+    X_test, y_test_true = load_and_process_dataset(dataset_name, "./data", False)
+    file_name = dataset_name.lower()
 
-    np.save('./embedding_data/cifar10_dinov2B_X_train.npy', cifar10_X_train)
-    np.save('./embedding_data/cifar10_dinov2B_y_train.npy', cifar10_y_train_true)
-    np.save('./embedding_data/cifar10_dinov2B_X_test.npy', cifar10_X_test)
-    np.save('./embedding_data/cifar10_dinov2B_y_test.npy', cifar10_y_test_true)
+    np.save(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{file_name}_dinov2B_X_train.npy', X_train)
+    np.save(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{file_name}_dinov2B_y_train.npy', y_train_true)
+    np.save(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{file_name}_dinov2B_X_test.npy', X_test)
+    np.save(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{file_name}_dinov2B_y_test.npy', y_test_true)
 
-    # CIFAR-100
-    cifar100_X_train, cifar100_y_train_true = load_and_process_dataset("CIFAR100", "./data", True)
-    cifar100_X_test, cifar100_y_test_true = load_and_process_dataset("CIFAR100", "./data", False)
-
-    np.save('./embedding_data/cifar100_dinov2B_X_train.npy', cifar100_X_train)
-    np.save('./embedding_data/cifar100_dinov2B_y_train.npy', cifar100_y_train_true)
-    np.save('./embedding_data/cifar100_dinov2B_X_test.npy', cifar100_X_test)
-    np.save('./embedding_data/cifar100_dinov2B_y_test.npy', cifar100_y_test_true)
-
-    # Flowers-102
-    flowers102_X_train, flowers102_y_train_true = load_and_process_dataset("Flowers102", "./data",  True)
-    flowers102_X_test, flowers102_y_test_true = load_and_process_dataset("Flowers102", "./data",  False)
-
-    np.save('./embedding_data/flowers102_dinov2B_X_train.npy', flowers102_X_train)
-    np.save('./embedding_data/flowers102_dinov2B_y_train.npy', flowers102_y_train_true)
-    np.save('./embedding_data/flowers102_dinov2B_X_test.npy', flowers102_X_test)
-    np.save('./embedding_data/flowers102_dinov2B_y_test.npy', flowers102_y_test_true)
