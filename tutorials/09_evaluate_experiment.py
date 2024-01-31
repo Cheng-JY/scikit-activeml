@@ -15,13 +15,12 @@ if __name__ == "__main__":
     experiment = mlflow.get_experiment_by_name("Evaluation-Active Learning")
     df = mlflow.search_runs(experiment_ids=experiment.experiment_id, output_format="pandas")
 
-    print(df.columns)
     df = df[['params.dataset', 'params.qs', 'params.batch_size', 'params.n_cycles', 'params.seed', 'artifact_uri']]
+    print(len(df['params.seed'].unique()))
     for idx, row in df.iterrows():
         artifact = os.path.join(row.artifact_uri, 'result.csv')
         if os.path.exists(artifact):
-            print(row)
             dataframe = pd.read_csv(artifact, index_col=0, on_bad_lines='skip')
             dataframe = dataframe.dropna()
-            print(dataframe)
+
 
