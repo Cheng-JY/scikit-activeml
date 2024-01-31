@@ -35,14 +35,14 @@ def evaluate_experiment_csv_score(dataset_name):
         qs_result_s_std = qs_result_s['s_std'].to_numpy()
 
         plt.errorbar(np.arange(len(qs_result_s_mean)), qs_result_s_mean, qs_result_s_std,
-                     label=f"({qs_result_s_mean[-1]:.4f}) {qs_name}", alpha=0.5)
+                     label=f"({np.mean(qs_result_s_mean):.4f}) {qs_name}", alpha=0.5)
 
     plt.title(dataset_name)
     plt.legend(loc='lower right')
     plt.xlabel('cycle')
     plt.ylabel('score')
     # output_path = f'{dataset_name}_score.png'
-    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result/{dataset_name}_score.png'
+    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result/{dataset_name}_score.p'
     plt.savefig(output_path)
 
 
@@ -63,14 +63,14 @@ def evaluate_experiment_csv_time(dataset_name):
         qs_result_t_std = qs_result_t['t_std'].to_numpy()
 
         plt.errorbar(np.arange(len(qs_result_t_mean)), qs_result_t_mean, qs_result_t_std,
-                     label=f"({qs_result_t_mean[-1]:.4f}) {qs_name}", alpha=0.3)
+                     label=f"({np.mean(qs_result_t_mean):.4f}) {qs_name}", alpha=0.3)
 
     plt.title(dataset_name)
     plt.legend(loc='lower right')
     plt.xlabel('cycle')
     plt.ylabel('time')
     # output_path = f'{dataset_name}_time.png'
-    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result/{dataset_name}_time.png'
+    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result/{dataset_name}_time.pdf'
     plt.savefig(output_path)
 
 
