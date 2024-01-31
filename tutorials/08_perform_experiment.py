@@ -4,8 +4,8 @@ import warnings
 import mlflow
 import os
 
-#sys.path.append("/Users/chengjiaying/scikit-activeml/")
-sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
+sys.path.append("/Users/chengjiaying/scikit-activeml/")
+# sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
 warnings.filterwarnings("ignore")
 
 import numpy as np
@@ -39,14 +39,14 @@ def create_query_strategy(name, random_state):
     return query_strategy_factory_functions[name](random_state)
 
 def load_embedding_dataset(name):
-    # X_train = np.load('./embedding_data/flowers102_dinov2B_X_train.npy')
-    # y_train_true = np.load('./embedding_data/flowers102_dinov2B_y_train.npy')
-    # X_test = np.load('./embedding_data/flowers102_dinov2B_X_test.npy')
-    # y_test_true = np.load('./embedding_data/flowers102_dinov2B_y_test.npy')
-    X_train = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_train.npy')
-    y_train_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_train.npy')
-    X_test = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_test.npy')
-    y_test_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_test.npy')
+    X_train = np.load('./embedding_data/flowers102_dinov2B_X_train.npy')
+    y_train_true = np.load('./embedding_data/flowers102_dinov2B_y_train.npy')
+    X_test = np.load('./embedding_data/flowers102_dinov2B_X_test.npy')
+    y_test_true = np.load('./embedding_data/flowers102_dinov2B_y_test.npy')
+    # X_train = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_train.npy')
+    # y_train_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_train.npy')
+    # X_test = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_X_test.npy')
+    # y_test_true = np.load(f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/embedding_data/{name}_dinov2B_y_test.npy')
     return X_train, y_train_true, X_test, y_test_true
 
 def save_in_csv():
@@ -65,7 +65,22 @@ def save_in_csv():
     #output_path=f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_{n_cycles}_csv.csv'
     df.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
 
-def save_in_csv_mlflow():
+def save_in_csv_mlflow(artifacts_path):
+    data = {
+        'dataset': [dataset_name],
+        'qs': [qs_name],
+        'batch_size': [batch_size],
+        'n_cycles': [n_cycles],
+        'seed': [seed],
+        'step': [c],
+        'score': [score],
+        'time': [end - start]
+    }
+    df = pd.DataFrame(data=data)
+    # output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_{n_cycles}_csv.csv'
+    output_path=f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_{n_cycles}_csv.csv'
+    df.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
+
     
     
 if __name__ == '__main__':
@@ -103,12 +118,25 @@ if __name__ == '__main__':
     y_train = np.full(shape=y_train_true.shape, fill_value=MISSING_LABEL)
     clf.fit(X_train, y_train)
 
-    #mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
-    mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
+    mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
+    #mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
     exp = mlflow.get_experiment_by_name("Evaluation-Active Learning")
     experiment_id = mlflow.create_experiment(name="Evaluation-Active Learning") if exp is None else exp.experiment_id
 
-    with (mlflow.start_run(experiment_id=experiment_id)):
+    with (mlflow.start_run(experiment_id=experiment_id) as active_run):
+        params = {
+            'dataset': dataset_name,
+            'qs': qs_name,
+            'batch_size': batch_size,
+            'n_cycles': n_cycles,
+            'seed': seed,
+        }
+        mlflow.log_params(params)
+        metric_dict = {
+            'accuracy': [],
+            'time': [],
+            'step': [],
+        }
         for c in tqdm(range(n_cycles), desc=f'{qs_name} for {dataset_name}'):
             start = time.time()
             query_idx = call_func(qs.query, X=X_train, y=y_train, batch_size=batch_size, clf=clf, discriminator=clf)
@@ -116,17 +144,15 @@ if __name__ == '__main__':
             y_train[query_idx] = y_train_true[query_idx]
             clf.fit(X_train, y_train)
             score = clf.score(X_test, y_test_true)
-            mlflow.log_metric(key='score', value=score, step=c)
-            mlflow.log_metric(key='time', value=end-start, step=c)
-            tags = {
-                'dataset': dataset_name,
-                'qs': qs_name,
-                'batch_size': batch_size,
-                'n_cycles': n_cycles,
-                'seed': seed,
-                'step': c,
-            }
-            mlflow.set_tags(tags)
-            save_in_csv()
+            metric_dict['accuracy'].append(score)
+            metric_dict['time'].append(end - start)
+            metric_dict['step'].append(c)
+            #save_in_csv()
+        df = pd.DataFrame.from_dict(data=metric_dict)
+        print(active_run.info.artifact_uri)
+        # outpath = active_run.info.artifact_uri.split("file://")[1]
+        outpath = os.path.join(active_run.info.artifact_uri, "result.csv")
+        df.to_csv(outpath, index=False)
+
 
 
