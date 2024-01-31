@@ -82,6 +82,7 @@ if __name__ == '__main__':
         "cifar10": 10,
         "cifar100": 100,
         "flowers102": 102,
+        "stl10": 10,
     }
     classes = dataset_classes[dataset_name]
 

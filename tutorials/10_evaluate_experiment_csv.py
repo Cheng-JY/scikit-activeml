@@ -13,13 +13,14 @@ warnings.filterwarnings("ignore")
 def parse_argument():
     parser = argparse.ArgumentParser(description='Evaluate model performance')
     parser.add_argument('dataset', type=str, help='name of dataset')
+    parser.add_argument('n_cycles', type=int, help='n_cycles')
     return parser
 
 
 def evaluate_experiment_csv_score(dataset_name):
     # load csx
     # input_path = f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
-    input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
+    input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv_2/{dataset_name}_{n_cycles}_csv.csv'
     dataframe = pd.read_csv(input_path, index_col=0, on_bad_lines='skip')
     dataframe = dataframe.dropna()
 
@@ -42,13 +43,13 @@ def evaluate_experiment_csv_score(dataset_name):
     plt.xlabel('cycle')
     plt.ylabel('score')
     # output_path = f'{dataset_name}_score.png'
-    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result/{dataset_name}_score.p'
+    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result/{dataset_name}_score.pdf'
     plt.savefig(output_path)
 
 
 def evaluate_experiment_csv_time(dataset_name):
     # input_path = f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
-    input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
+    input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv_2/{dataset_name}_{n_cycles}_csv.csv'
     dataframe = pd.read_csv(input_path, index_col=0, on_bad_lines='skip')
     dataframe = dataframe.dropna()
 
@@ -78,6 +79,7 @@ if __name__ == '__main__':
     parser = parse_argument()
     args = parser.parse_args()
     dataset_name = args.dataset
+    n_cycles = args.n_cycles
 
     evaluate_experiment_csv_score(dataset_name)
     evaluate_experiment_csv_time(dataset_name)
