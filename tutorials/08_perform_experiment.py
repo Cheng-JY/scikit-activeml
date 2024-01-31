@@ -64,6 +64,9 @@ def save_in_csv():
     output_path=f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv/{dataset_name}_{n_cycles}_csv.csv'
     #output_path=f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_{n_cycles}_csv.csv'
     df.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
+
+def save_in_csv_mlflow():
+    
     
 if __name__ == '__main__':
     parser = parse_argument()
