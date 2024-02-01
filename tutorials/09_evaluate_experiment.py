@@ -29,20 +29,17 @@ if __name__ == "__main__":
     df = mlflow.search_runs(experiment_ids=experiment.experiment_id, output_format="pandas")
 
     df = df[['params.dataset', 'params.qs', 'params.batch_size', 'params.n_cycles', 'params.seed', 'artifact_uri']]
-    for idx, row in df.iterrows():
-        artifact = os.path.join(row.artifact_uri, 'result.csv')
-        if os.path.exists(artifact):
-            dataframe = pd.read_csv(artifact, index_col=0, on_bad_lines='skip')
-            dataframe = dataframe.dropna()
 
     df = df.loc[df['params.dataset'] == dataset_name]
     query_stragies = df['params.qs'].unique()
 
     for qs_name in query_stragies:
+        print(qs_name)
         df_qs = df.loc[df['params.qs'] == qs_name]
         r = []
         for idx, row in df_qs.iterrows():
             artifact = os.path.join(row.artifact_uri, 'result.csv')
+            artifact = artifact.split("file://")[1]
             if os.path.exists(artifact):
                 result_qs = pd.read_csv(artifact, index_col=0)
                 r.append(result_qs)
