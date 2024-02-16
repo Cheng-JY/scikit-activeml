@@ -21,6 +21,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dataset_name = args.dataset
     graph_type = args.graph_type
+    batch_size = 16
 
     # mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
     mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
@@ -47,13 +48,16 @@ if __name__ == "__main__":
         result = results.groupby(['step'])[graph_type].agg(['mean', 'std']).set_axis(['mean', 'std'], axis=1)
         result_mean = result['mean'].to_numpy()
         result_std = result['std'].to_numpy()
-        plt.errorbar(np.arange(1, len(result_mean)+1), result_mean, result_std,
+        plt.errorbar(np.arange(16, (len(result_mean)+1)*16, 16), result_mean, result_std,
                     label=f"({np.mean(result_mean):.4f}) {qs_name}", alpha=0.3)
 
-    plt.title(dataset_name.upper())
     plt.legend(loc='lower right')
-    plt.xlabel('cycle')
-    plt.ylabel(graph_type)
+    plt.xlabel('# Labels queried')
+    if graph_type == "time":
+        plt.yscale("log")
+        plt.ylabel("Time [s]")
+    else:
+        plt.ylabel("Accuracy")
     # output_path = f'{dataset_name}_{graph_type}.pdf'
     output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result_param/{dataset_name}_{graph_type}.pdf'
     plt.savefig(output_path)

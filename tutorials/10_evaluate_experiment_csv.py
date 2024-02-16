@@ -35,13 +35,16 @@ def evaluate_experiment_csv_score(dataset_name):
         qs_result_s_mean = qs_result_s['s_mean'].to_numpy()
         qs_result_s_std = qs_result_s['s_std'].to_numpy()
 
-        plt.errorbar(np.arange(1, len(qs_result_s_mean)+1), qs_result_s_mean, qs_result_s_std,
+        plt.errorbar(np.arange(16, (len(result_mean)+1)*16, 16), qs_result_s_mean, qs_result_s_std,
                      label=f"({np.mean(qs_result_s_mean):.4f}) {qs_name}", alpha=0.5)
 
-    plt.title(dataset_name)
     plt.legend(loc='lower right')
-    plt.xlabel('cycle')
-    plt.ylabel('score')
+    plt.xlabel('# Labels queried')
+    if graph_type == "time":
+        plt.yscale("log")
+        plt.ylabel("Time [s]")
+    else:
+        plt.ylabel("Accuracy")
     # output_path = f'{dataset_name}_score.png'
     output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result/{dataset_name}_score.pdf'
     plt.savefig(output_path)
