@@ -61,7 +61,7 @@ def save_in_csv():
             'time': [end-start]
             }
     df = pd.DataFrame(data=data)
-    output_path=f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv_2/{dataset_name}_{n_cycles}_csv.csv'
+    output_path=f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv_3/{dataset_name}_{n_cycles}_csv.csv'
     # output_path=f'/Users/chengjiaying/scikit-activeml/tutorials/csv_2/{dataset_name}_{n_cycles}_csv.csv'
     df.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
 
@@ -104,8 +104,8 @@ if __name__ == '__main__':
 
     # mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
     mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
-    exp = mlflow.get_experiment_by_name("Evaluation-Active-Learning-Params")
-    experiment_id = mlflow.create_experiment(name="Evaluation-Active-Learning-Params") if exp is None else exp.experiment_id
+    exp = mlflow.get_experiment_by_name("Evaluation-Active-Learning-Params-new")
+    experiment_id = mlflow.create_experiment(name="Evaluation-Active-Learning-Params-new") if exp is None else exp.experiment_id
 
     with (mlflow.start_run(experiment_id=experiment_id) as active_run):
         params = {

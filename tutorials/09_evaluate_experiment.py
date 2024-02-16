@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
     mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
 
-    experiment = mlflow.get_experiment_by_name("Evaluation-Active-Learning-Params")
+    experiment = mlflow.get_experiment_by_name("Evaluation-Active-Learning-Params-new")
     df = mlflow.search_runs(experiment_ids=experiment.experiment_id, output_format="pandas")
 
     df = df[['params.dataset', 'params.qs', 'params.batch_size', 'params.n_cycles', 'params.seed', 'artifact_uri']]

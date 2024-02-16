@@ -20,7 +20,7 @@ def parse_argument():
 def evaluate_experiment_csv_score(dataset_name):
     # load csx
     # input_path = f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
-    input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv_2/{dataset_name}_{n_cycles}_csv.csv'
+    input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv_3/{dataset_name}_{n_cycles}_csv.csv'
     dataframe = pd.read_csv(input_path, index_col=0, on_bad_lines='skip')
     dataframe = dataframe.dropna()
 
@@ -49,7 +49,7 @@ def evaluate_experiment_csv_score(dataset_name):
 
 def evaluate_experiment_csv_time(dataset_name):
     # input_path = f'/Users/chengjiaying/scikit-activeml/tutorials/csv/{dataset_name}_csv.csv'
-    input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv_2/{dataset_name}_{n_cycles}_csv.csv'
+    input_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/csv_3/{dataset_name}_{n_cycles}_csv.csv'
     dataframe = pd.read_csv(input_path, index_col=0, on_bad_lines='skip')
     dataframe = dataframe.dropna()
 
