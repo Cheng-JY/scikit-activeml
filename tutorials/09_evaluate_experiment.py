@@ -47,7 +47,7 @@ if __name__ == "__main__":
         result = results.groupby(['step'])[graph_type].agg(['mean', 'std']).set_axis(['mean', 'std'], axis=1)
         result_mean = result['mean'].to_numpy()
         result_std = result['std'].to_numpy()
-        plt.errorbar(np.arange(len(result_mean)), result_mean, result_std,
+        plt.errorbar(np.arange(1, len(result_mean)+1), result_mean, result_std,
                     label=f"({np.mean(result_mean):.4f}) {qs_name}", alpha=0.3)
 
     plt.title(dataset_name.upper())

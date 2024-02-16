@@ -35,7 +35,7 @@ def evaluate_experiment_csv_score(dataset_name):
         qs_result_s_mean = qs_result_s['s_mean'].to_numpy()
         qs_result_s_std = qs_result_s['s_std'].to_numpy()
 
-        plt.errorbar(np.arange(len(qs_result_s_mean)), qs_result_s_mean, qs_result_s_std,
+        plt.errorbar(np.arange(1, len(qs_result_s_mean)+1), qs_result_s_mean, qs_result_s_std,
                      label=f"({np.mean(qs_result_s_mean):.4f}) {qs_name}", alpha=0.5)
 
     plt.title(dataset_name)
