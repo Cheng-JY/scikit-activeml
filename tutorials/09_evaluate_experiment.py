@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
     mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
 
-    experiment = mlflow.get_experiment_by_name("Evaluation-Active-Learning-Params-new")
+    experiment = mlflow.get_experiment_by_name("Evaluation-Active-Learning-Params-CIFAR100")
     df = mlflow.search_runs(experiment_ids=experiment.experiment_id, output_format="pandas")
 
     df = df[['params.dataset', 'params.qs', 'params.batch_size', 'params.n_cycles', 'params.seed', 'artifact_uri']]
@@ -41,6 +41,8 @@ if __name__ == "__main__":
         for idx, row in df_qs.iterrows():
             artifact = os.path.join(row.artifact_uri, 'result.csv')
             artifact = artifact.split("file://")[1]
+            print(artifact)
+            print(os.path.exists(artifact))
             if os.path.exists(artifact):
                 result_qs = pd.read_csv(artifact, index_col=0)
                 r.append(result_qs)
