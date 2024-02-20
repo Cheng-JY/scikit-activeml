@@ -24,9 +24,9 @@ if __name__ == "__main__":
     batch_size = 16
 
     # mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
-    mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/tracking")
+    mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/mlflow_tracking")
 
-    experiment = mlflow.get_experiment_by_name("Evaluation-Active-Learning-Params-CIFAR100")
+    experiment = mlflow.get_experiment_by_name("Evaluation-Active-Learning-Params")
     df = mlflow.search_runs(experiment_ids=experiment.experiment_id, output_format="pandas")
 
     df = df[['params.dataset', 'params.qs', 'params.batch_size', 'params.n_cycles', 'params.seed', 'artifact_uri']]
