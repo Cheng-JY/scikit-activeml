@@ -2,6 +2,7 @@ import os
 import mlflow
 import matplotlib as mlp
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import warnings
 import numpy as np
 
@@ -33,9 +34,13 @@ if __name__ == "__main__":
 
     df = df.loc[df['params.dataset'] == dataset_name]
     query_stragies = df['params.qs'].unique()
+    colors = ["b", "g", "r", "c", "m", "k"]
 
-    for qs_name in query_stragies:
+    for idx, qs_name in enumerate(query_stragies):
         print(qs_name)
+        print(idx)
+        print(colors[idx])
+        color = colors[idx]
         df_qs = df.loc[df['params.qs'] == qs_name]
         r = []
         for idx, row in df_qs.iterrows():
@@ -51,9 +56,10 @@ if __name__ == "__main__":
         result_mean = result['mean'].to_numpy()
         result_std = result['std'].to_numpy()
         plt.errorbar(np.arange(16, (len(result_mean)+1)*16, 16), result_mean, result_std,
-                    label=f"({np.mean(result_mean):.4f}) {qs_name}", alpha=0.3)
-
-    plt.legend(loc='lower right')
+                    label=f"({np.mean(result_mean):.4f}) {qs_name}", alpha=0.3, color=color)
+        
+    plt.legend(bbox_to_anchor =(0.5,-0.4), loc='lower center', ncol=2)
+    plt.tight_layout()
     plt.xlabel('# Labels queried')
     if graph_type == "time":
         plt.yscale("log")
