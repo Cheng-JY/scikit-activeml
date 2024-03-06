@@ -23,7 +23,6 @@ if __name__ == "__main__":
     dataset_name = args.dataset
     graph_type = args.graph_type
     batch_size = 16
-    number = 0
 
     # mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
     mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/mlflow_tracking")
@@ -37,6 +36,9 @@ if __name__ == "__main__":
     query_stragies = df['params.qs'].unique()
     colors = ["b", "g", "r", "c", "m", "k"]
     query_list = [5, 2, 4, 3, 0, 1]
+
+    fig, ax = plt.subplots()
+    artists = []
 
     for idx, qs_name in enumerate(query_stragies):
         if idx not in []:
