@@ -585,7 +585,7 @@ def format_plot(data, template_path):
             splits = s.split("|")
             key = splits[0]
 
-            if "FULLEXAMPLES" not in os.environ:
+            if False:
                 if key == "n_samples":
                     data[key] = "10"
                 elif key == "n_cycles":
