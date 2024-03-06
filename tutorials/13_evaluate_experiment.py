@@ -23,6 +23,7 @@ if __name__ == "__main__":
     dataset_name = args.dataset
     graph_type = args.graph_type
     batch_size = 16
+    number = 0
 
     # mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
     mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/mlflow_tracking")
@@ -35,8 +36,11 @@ if __name__ == "__main__":
     df = df.loc[df['params.dataset'] == dataset_name]
     query_stragies = df['params.qs'].unique()
     colors = ["b", "g", "r", "c", "m", "k"]
+    query_list = [5, 2, 4, 3, 0, 1]
 
     for idx, qs_name in enumerate(query_stragies):
+        if idx not in []:
+            continue
         print(qs_name)
         print(idx)
         print(colors[idx])
@@ -57,7 +61,8 @@ if __name__ == "__main__":
         result_std = result['std'].to_numpy()
         plt.errorbar(np.arange(16, (len(result_mean)+1)*16, 16), result_mean, result_std,
                     label=f"({np.mean(result_mean):.4f}) {qs_name}", alpha=0.3, color=color)
-        
+
+    plt.axis([0,500,0,1])
     plt.legend(bbox_to_anchor =(0.5,-0.35), loc='lower center', ncol=3)
     plt.tight_layout()
     plt.xlabel('# Labels queried')
@@ -68,7 +73,7 @@ if __name__ == "__main__":
         plt.ylabel("Accuracy")
     # output_path = f'{dataset_name}_{graph_type}.pdf'
     plt.title(dataset_name)
-    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result_param/{dataset_name}_{graph_type}.pdf'
+    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result_param/{dataset_name}_{graph_type}_{number}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
 
 
