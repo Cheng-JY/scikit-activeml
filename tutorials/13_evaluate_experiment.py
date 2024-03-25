@@ -23,6 +23,7 @@ if __name__ == "__main__":
     dataset_name = args.dataset
     graph_type = args.graph_type
     batch_size = 16
+    number = 2
 
     # mlflow.set_tracking_uri(uri="/Users/chengjiaying/scikit-activeml/tutorials/tracking")
     mlflow.set_tracking_uri(uri="file:///mnt/stud/home/jcheng/scikit-activeml/tutorials/mlflow_tracking")
@@ -37,11 +38,8 @@ if __name__ == "__main__":
     colors = ["b", "g", "r", "c", "m", "k"]
     query_list = [5, 2, 4, 3, 0, 1]
 
-    fig, ax = plt.subplots()
-    artists = []
-
     for idx, qs_name in enumerate(query_stragies):
-        if idx not in []:
+        if idx not in query_list[:number]:
             continue
         print(qs_name)
         print(idx)
@@ -65,6 +63,7 @@ if __name__ == "__main__":
                     label=f"({np.mean(result_mean):.4f}) {qs_name}", alpha=0.3, color=color)
 
     plt.axis([0,500,0,1])
+    plt.figure(figsize=(5,3))
     plt.legend(bbox_to_anchor =(0.5,-0.35), loc='lower center', ncol=3)
     plt.tight_layout()
     plt.xlabel('# Labels queried')

@@ -58,7 +58,7 @@ if __name__ == "__main__":
         plt.errorbar(np.arange(16, (len(result_mean)+1)*16, 16), result_mean, result_std,
                     label=f"({np.mean(result_mean):.4f}) {qs_name}", alpha=0.3, color=color)
         
-    plt.legend(bbox_to_anchor =(0.5,-0.35), loc='lower center', ncol=3)
+    plt.legend(bbox_to_anchor =(0.5,-0.35), loc='lower center', ncol=2)
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     if graph_type == "time":
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         plt.ylabel("Accuracy")
     # output_path = f'{dataset_name}_{graph_type}.pdf'
     plt.title(dataset_name)
-    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result_param/{dataset_name}_{graph_type}.pdf'
+    output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result_param/{dataset_name}_{graph_type}_2.pdf'
     plt.savefig(output_path, bbox_inches="tight")
 
 
