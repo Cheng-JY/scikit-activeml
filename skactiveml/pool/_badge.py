@@ -38,23 +38,28 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
          by Diverse, Uncertain Gradient Lower Bounds." ICLR, 2019.
     """
 
-    def __init__(self, missing_label=MISSING_LABEL, random_state=None):
+    def __init__(
+        self,
+        clf_embedding_flag_name=None,
+        missing_label=MISSING_LABEL,
+        random_state=None,
+    ):
+        self.clf_embedding_flag_name = clf_embedding_flag_name
         super().__init__(
             missing_label=missing_label, random_state=random_state
         )
 
     def query(
-            self,
-            X,
-            y,
-            clf,
-            fit_clf=True,
-            candidates=None,
-            batch_size=1,
-            return_utilities=False,
-            clf_embedding_flag=None,
+        self,
+        X,
+        y,
+        clf,
+        fit_clf=True,
+        candidates=None,
+        batch_size=1,
+        return_utilities=False,
     ):
-        """Query the next samples to be labelled
+        """Query the next samples to be labeled.
 
         Parameters
         ----------
@@ -80,7 +85,7 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
             The number of samples to be selected in one AL cycle.
         return_utilities : bool, optional (default=False)
             If true, also return the utilities based on the query strategy.
-        clf_embedding_flag : string, optional (default=None)
+        clf_embedding_flag_name : string, optional (default=None)
             The name of the parameter, whether to return the embedding or not,
             according to the used classifier.
             By default, `None` means no embeddings will be returned, but we use
@@ -123,8 +128,8 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
         check_type(clf, "clf", SkactivemlClassifier)
         check_equal_missing_label(clf.missing_label, self.missing_label_)
         check_scalar(fit_clf, "fit_clf", bool)
-        if clf_embedding_flag is not None:
-            check_scalar(clf_embedding_flag, "clf_embedding_flag", str)
+        if self.clf_embedding_flag_name is not None:
+            check_scalar(self.clf_embedding_flag_name, "clf_embedding_flag_name", str)
 
         # Fit the classifier
         if fit_clf:
@@ -145,9 +150,9 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
             unlbld_mapping = np.arange(len(X_cand))
 
         # gradient embedding, aka predict class membership probabilities
-        if clf_embedding_flag is not None:
+        if self.clf_embedding_flag_name is not None:
             probas, X_unlbld = clf.predict_proba(
-                X_unlbld, **{clf_embedding_flag: True}
+                X_unlbld, **{self.clf_embedding_flag_name: True}
             )
         else:
             probas = clf.predict_proba(X_unlbld)
@@ -219,11 +224,11 @@ def _d_2(g_x, query_indicies, d_latest=None):
     g_x : numpy.ndarray of shape (n_unlabeled_samples, n_features)
         The results after gradient embedding
     query_indicies : numpy.ndarray of shape (n_query_indicies)
-        the query indications that correspond to the unlabeled samples
+        the query indications that correspond to the unlabeled samples.
     d_latest : numpy.ndarray of shape (n_unlabeled_samples) default=None
         The distance between each data point and its nearest centre.
         This is used to simplify the calculation of the later distances for the
-        next selected sample
+        next selected sample.
 
     Returns
     -------
@@ -231,7 +236,7 @@ def _d_2(g_x, query_indicies, d_latest=None):
         The D^2 value, for the first sample, is the value inf.
     """
     if len(query_indicies) == 0:
-        return np.sum(g_x ** 2, axis=-1)
+        return np.sum(g_x**2, axis=-1)
     g_query_indicies = g_x[query_indicies]
     _, D = pairwise_distances_argmin_min(X=g_x, Y=g_query_indicies)
     if d_latest is not None:

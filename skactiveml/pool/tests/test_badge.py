@@ -17,9 +17,12 @@ from sklearn.exceptions import NotFittedError
 class TestBadge(TemplateSingleAnnotatorPoolQueryStrategy, unittest.TestCase):
     def setUp(self):
         self.classes = [0, 1]
+        X = np.array([[1, 2], [5, 8], [8, 4], [5, 4]])
+        y = np.array([0, 1, MISSING_LABEL, MISSING_LABEL])
+
         self.query_default_params_clf = {
-            "X": np.array([[1, 2], [5, 8], [8, 4], [5, 4]]),
-            "y": np.array([0, 1, MISSING_LABEL, MISSING_LABEL]),
+            "X": X,
+            "y": y,
             "clf": SklearnClassifier(
                 LogisticRegression(random_state=0),
                 classes=self.classes,
@@ -27,8 +30,8 @@ class TestBadge(TemplateSingleAnnotatorPoolQueryStrategy, unittest.TestCase):
             ),
         }
         self.query_default_params_clf_2 = {
-            "X": np.array([[1, 2], [5, 8], [8, 4], [5, 4]]),
-            "y": np.array([0, 1, MISSING_LABEL, MISSING_LABEL]),
+            "X": X,
+            "y": y,
             "clf": ParzenWindowClassifierEmbedding(
                 classes=self.classes, random_state=42
             ),
@@ -62,13 +65,7 @@ class TestBadge(TemplateSingleAnnotatorPoolQueryStrategy, unittest.TestCase):
         ]
         self._test_param("query", "fit_clf", test_cases=test_cases)
 
-    def test_query_param_clf_embedding_flag(self, test_cases=None):
-        super().setUp(
-            qs_class=Badge,
-            init_default_params={"random_state": 42},
-            query_default_params_clf=self.query_default_params_clf_2,
-        )
-
+    def test_init_param_clf_embedding_flag_name(self, test_cases=None):
         test_cases = [] if test_cases is None else test_cases
         test_cases += [
             (1, TypeError),
@@ -77,10 +74,10 @@ class TestBadge(TemplateSingleAnnotatorPoolQueryStrategy, unittest.TestCase):
             (True, TypeError),
             ("return_embeddings", None),
         ]
-        self._test_param("query", "clf_embedding_flag", test_cases=test_cases)
+        self._test_param("init", "clf_embedding_flag_name", replace_query_params=self.query_default_params_clf_2, test_cases=test_cases)
 
     def test_query(self):
-        # test case 1: with the same random stat the init pick up is the same
+        # test case 1: with the same random state the init pick-up is the same
         badge_1 = Badge(random_state=42)
         X_1 = np.random.RandomState(42).choice(5, size=(10, 2))
         y_1 = np.hstack([[0, 1], np.full(8, MISSING_LABEL)])
@@ -101,7 +98,7 @@ class TestBadge(TemplateSingleAnnotatorPoolQueryStrategy, unittest.TestCase):
                 else:
                     self.assertTrue(np.isnan(i))
 
-        # test case 3: for the case, the sum of utilities equals to one.
+        # test case 3: for the case, the sum of utilities equals to one
         probas = [i for i in utilities_2[0] if not np.isnan(i)]
         probas_sum = np.sum(probas)
         self.assertAlmostEqual(probas_sum, 1)
@@ -142,7 +139,7 @@ class TestBadge(TemplateSingleAnnotatorPoolQueryStrategy, unittest.TestCase):
         self.assertEqual(5, utilities_5.shape[1])
         self.assertEqual(2, utilities_5.shape[0])
 
-        # test case 6: for clf know only a class
+        # test case 6: for clf knows only a single class
         X_6 = np.random.RandomState(42).choice(5, size=(10, 2))
         y_6 = np.hstack([[0], np.full(9, MISSING_LABEL)])
         _, utilities_6 = badge_1.query(
@@ -157,17 +154,16 @@ class TestBadge(TemplateSingleAnnotatorPoolQueryStrategy, unittest.TestCase):
         probas_sum = np.sum(probas)
         self.assertAlmostEqual(probas_sum, 1)
 
-        # test case 7: clf_embedding_flag = "return_embeddings"
+        # test case 7: clf_embedding_flag_name = "return_embeddings"
         clf_7 = ParzenWindowClassifierEmbedding(
             classes=self.classes, random_state=42
         )
+        badge_7 = Badge(
+            clf_embedding_flag_name="return_embeddings", random_state=42
+        )
         np.testing.assert_array_equal(
-            badge_1.query(
-                X_1, y_1, clf_7, clf_embedding_flag="return_embeddings"
-            ),
-            badge_1.query(
-                X_1, y_1, clf_7, clf_embedding_flag="return_embeddings"
-            ),
+            badge_7.query(X_1, y_1, clf_7),
+            badge_7.query(X_1, y_1, clf_7),
         )
 
         # test case 8: predict_probas returns tuple
@@ -175,12 +171,8 @@ class TestBadge(TemplateSingleAnnotatorPoolQueryStrategy, unittest.TestCase):
             classes=self.classes, random_state=42
         )
         np.testing.assert_array_equal(
-            badge_1.query(
-                X_1, y_1, clf_8
-            ),
-            badge_1.query(
-                X_1, y_1, clf_8
-            ),
+            badge_1.query(X_1, y_1, clf_8),
+            badge_1.query(X_1, y_1, clf_8),
         )
 
 
@@ -190,6 +182,7 @@ class ParzenWindowClassifierEmbedding(ParzenWindowClassifier):
         if not return_embeddings:
             return probas
         return probas, X
+
 
 class ParzenWindowClassifierTuple(ParzenWindowClassifier):
     def predict_proba(self, X, return_embeddings=False):
