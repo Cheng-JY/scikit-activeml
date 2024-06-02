@@ -7,15 +7,18 @@ import warnings
 import numpy as np
 
 import pandas as pd
+
 mlp.rcParams["figure.facecolor"] = "white"
 warnings.filterwarnings("ignore")
 import argparse
+
 
 def parse_argument():
     parser = argparse.ArgumentParser(description='Evaluate model performance')
     parser.add_argument('dataset', type=str, help='name of dataset')
     parser.add_argument('graph_type', type=str, help='accuracy or time')
     return parser
+
 
 if __name__ == "__main__":
     parser = parse_argument()
@@ -55,10 +58,10 @@ if __name__ == "__main__":
         result = results.groupby(['step'])[graph_type].agg(['mean', 'std']).set_axis(['mean', 'std'], axis=1)
         result_mean = result['mean'].to_numpy()
         result_std = result['std'].to_numpy()
-        plt.errorbar(np.arange(16, (len(result_mean)+1)*16, 16), result_mean, result_std,
-                    label=f"({np.mean(result_mean):.4f}) {qs_name}", alpha=0.3, color=color)
-        
-    plt.legend(bbox_to_anchor =(0.5,-0.35), loc='lower center', ncol=2)
+        plt.errorbar(np.arange(16, (len(result_mean) + 1) * 16, 16), result_mean, result_std,
+                     label=f"({np.mean(result_mean):.4f}) {qs_name}", alpha=0.3, color=color)
+
+    plt.legend(bbox_to_anchor=(0.5, -0.35), loc='lower center', ncol=2)
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     if graph_type == "time":
@@ -70,6 +73,3 @@ if __name__ == "__main__":
     plt.title(dataset_name)
     output_path = f'/mnt/stud/home/jcheng/scikit-activeml/tutorials/result_param/{dataset_name}_{graph_type}_2.pdf'
     plt.savefig(output_path, bbox_inches="tight")
-
-
-
