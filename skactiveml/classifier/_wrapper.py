@@ -2,8 +2,7 @@
 Wrapper for scikit-learn classifiers to deal with missing labels and labels
 from multiple annotators.
 """
-import inspect
-import types
+
 # Author: Marek Herde <marek.herde@uni-kassel.de>
 import warnings
 from collections import deque
@@ -865,19 +864,13 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
         )
 
         is_lbld = is_labeled(y, missing_label=self.missing_label)
-        try:
-            if np.sum(is_lbld) == 0:
-                raise ValueError("There is no labeled data.")
-            else:
-                X_lbld = X[is_lbld]
-                y_lbld = y[is_lbld].astype(np.int64)
-                return super(SkorchClassifier, self).fit(
-                    X_lbld, y_lbld, **fit_params
-                )
-        except Exception as e:
-            warnings.warn(
-                "The 'base_estimator' could not be fitted because of"
-                " '{}'. ".format(e)
+        if np.sum(is_lbld) == 0:
+            raise ValueError("There is no labeled data.")
+        else:
+            X_lbld = X[is_lbld]
+            y_lbld = y[is_lbld].astype(np.int64)
+            return super(SkorchClassifier, self).fit(
+                X_lbld, y_lbld, **fit_params
             )
             return self
 
@@ -888,7 +881,7 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
     #     # original from Skorch, actually, in the instance predict_nonlinearity='auto',  When set to ‘auto’,
     #     # infers the correct nonlinearity based on the criterion
     #     # (softmax for CrossEntropyLoss and sigmoid for BCEWithLogitsLoss).
-    #     # see: https://skorch.readthedocs.io/en/stable/classifier.html# (search: predict_nonlinearity)
+    #     # see: https://skorch.readthedocs.io/en/stable/net.html (search: predict_nonlinearity)
     #     # that means it doesn't need to be overwritten.
     #
     #     # Alternative 2: pass the ```predict_nonlinearity: callable``` in the predict_proba function and also the
@@ -909,46 +902,3 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
             Predicted class labels of the input samples.
         """
         return SkactivemlClassifier.predict(self, X)
-
-    def score(self, X, y, sample_weight=None):
-        return SkactivemlClassifier.score(self, X, y)
-
-    # def initialized_instance(self, instance_or_cls, kwargs):
-    #     """Return an instance initialized with the given parameters
-    #     Override the method in skorch to handle the test case
-    #
-    #     This is a helper method that deals with several possibilities for a
-    #     component that might need to be initialized:
-    #
-    #     * It is already an instance that's good to go
-    #     * It is an instance but it needs to be re-initialized
-    #     * It's not an instance and needs to be initialized
-    #
-    #     For the majority of use cases, this comes down to just comes down to
-    #     just initializing the class with its arguments.
-    #
-    #     Parameters
-    #     ----------
-    #     instance_or_cls
-    #       The instance or class or callable to be initialized, e.g.
-    #       ``self.module``.
-    #
-    #     kwargs : dict
-    #       The keyword arguments to initialize the instance or class. Can be an
-    #       empty dict.
-    #
-    #     Returns
-    #     -------
-    #     instance
-    #       The initialized component.
-    #     """
-    #     is_init = isinstance(instance_or_cls, torch.nn.Module)
-    #     if not is_init:
-    #         is_class = inspect.isclass(instance_or_cls)
-    #         if not is_class:
-    #             raise TypeError(f"{instance_or_cls} must be an instance of torch.nn.Module")
-    #         else:
-    #             is_subclass = issubclass(instance_or_cls, torch.nn.Module)
-    #             if not is_subclass:
-    #                 raise TypeError(f"{instance_or_cls} must be a subclass of torch.nn.Module")
-    #     return super().initialized_instance(instance_or_cls, kwargs)
