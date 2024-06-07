@@ -127,7 +127,7 @@ if __name__ == '__main__':
     y[query_idx] = y_train[query_idx]
 
     y_mv = majority_vote(y, random_state=RANDOM_STATE, missing_label=MISSING_LABEL)
-    net_mv.fit(X_train, y_mv)
+    net_mv.fit(X_train, ds['y_train_true'])
     # print(net_mv.score(ds['X_test'], ds['y_test_true']))
 
     # for c in range(n_cycle):
