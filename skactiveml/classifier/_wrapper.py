@@ -765,7 +765,7 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
       A PyTorch :class:`~torch.nn.Module`. In general, the
       uninstantiated class should be passed, although instantiated
       modules will also work.
-    criterion : torch criterion (class), default: nn.NLLoss()
+    criterion : torch criterion (class)
       The uninitialized criterion (loss) used to optimize the
       module.
     *args: arguments
@@ -797,7 +797,7 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
     def __init__(
         self,
         module,
-        criterion=nn.NLLLoss(),
+        criterion,
         classes=None,
         missing_label=MISSING_LABEL,
         cost_matrix=None,
