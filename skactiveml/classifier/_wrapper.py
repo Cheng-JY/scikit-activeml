@@ -818,15 +818,6 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
             random_state=random_state,
         )
 
-        # set random state in PyTorch
-        if isinstance(self.random_state, int):
-            torch.manual_seed(self.random_state)
-
-        # In Skorch, we don't need to initialize in the init statement, because
-        # it will be called inside the fit function. But I think for the test I need
-        # to call this here.
-        # self.initialize()
-
     def fit(self, X, y, **fit_params):
         """Initialize and fit the module.
 
@@ -872,7 +863,6 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
             return super(SkorchClassifier, self).fit(
                 X_lbld, y_lbld, **fit_params
             )
-            return self
 
     def predict(self, X):
         """Return class label predictions for the input data X.
