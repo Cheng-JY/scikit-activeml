@@ -595,8 +595,10 @@ class MultiAnnotatorPoolQueryStrategy(PoolQueryStrategy):
                 annotators = check_indices(annotators, y, dim=1)
             elif annotators.ndim == 2:
                 annotators = check_array(annotators, dtype=bool)
-                if candidates is None or candidates.ndim == 1:
+                if candidates is None:
                     check_consistent_length(X, annotators)
+                elif candidates.ndim == 1:
+                    check_consistent_length(X[candidates], annotators)
                 else:
                     check_consistent_length(candidates, annotators)
                 check_consistent_length(y.T, annotators.T)
