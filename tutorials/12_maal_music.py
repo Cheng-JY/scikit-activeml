@@ -60,6 +60,19 @@ def load_dataset_music():
 
     return X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true
 
+def load_dataset_label_me():
+    data_dir = "dataset/label-me"
+
+    X_train = np.load(f'{data_dir}/label-me-X.npy')
+    y_train = np.load(f'{data_dir}/label-me-y.npy')
+    y_train_true = np.load(f'{data_dir}/label-me-y-true.npy')
+    X_valid = np.load(f'{data_dir}/label-me-X-valid.npy')
+    y_valid_true = np.load(f'{data_dir}/label-me-y-true-valid.npy')
+    X_test = np.load(f'{data_dir}/label-me-X-test.npy')
+    y_test_true = np.load(f'{data_dir}/label-me-y-true-test.npy')
+
+    return X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true
+
 
 def seed_everything(seed=42):
     np.random.seed(seed)
@@ -74,7 +87,8 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # load dataset
-    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
+    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
+    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
 
     print(is_labeled(y_train, missing_label=MISSING_LABEL).sum())
     classes = np.unique(y_train_true)
@@ -97,6 +111,7 @@ if __name__ == '__main__':
 
     # randomly add missing labels
     y_partial = np.full_like(y_train, fill_value=MISSING_LABEL)
+    # initial_label_size = 15
     initial_label_size = 10
 
     for a_idx in range(n_annotators):
@@ -121,8 +136,9 @@ if __name__ == '__main__':
     A_random = np.ones_like(y_partial)
 
     n_al_cycle = 25
-    al_batch_size = 16
-    nn_name = ('cl')
+    # al_batch_size = 16
+    al_batch_size = 32
+    nn_name = ('cl-random')
 
     for c in range(n_al_cycle+1):
         if c > 0:
@@ -195,5 +211,5 @@ if __name__ == '__main__':
 
     print(is_labeled(y_partial, missing_label=MISSING_LABEL).sum())
     plt.plot(accuracies)
-    plt.title(f'{nn_name} + music + majority-voting + random-sampling')
+    plt.title(f'{nn_name} + label-me + majority-voting + random-sampling')
     plt.show()
