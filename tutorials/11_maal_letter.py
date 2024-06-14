@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
     n_al_cycle = 25
     al_batch_size = 128
-    nn_name = 'cl-performance'
+    nn_name = 'cl-random'
 
     for c in range(n_al_cycle+1):
         if c > 0:
@@ -185,5 +185,5 @@ if __name__ == '__main__':
         is_ulbld = is_unlabeled(y_partial, missing_label=MISSING_LABEL)
 
     plt.plot(misclassification)
-    plt.title(f'{nn_name} + letter + majority-voting + random-sampling')
+    plt.title(f'{nn_name} + letter + random-sampling')
     plt.show()
