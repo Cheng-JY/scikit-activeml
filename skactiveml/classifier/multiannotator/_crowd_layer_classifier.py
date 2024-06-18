@@ -269,6 +269,7 @@ class CrowdLayerModule(nn.Module):
             self.annotator_layers.append(layer)
 
     def set_return_logits_annotator(self, value):
+        # check if bool?
         self.return_logits_annot = value
         return self
 

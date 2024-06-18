@@ -3,7 +3,9 @@ import sys
 import time
 
 from matplotlib import pyplot as plt
-from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import fetch_openml
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.utils import check_random_state
 from skorch.callbacks import LRScheduler
 
 from skactiveml.utils import majority_vote
@@ -23,14 +25,70 @@ from skactiveml.classifier.multiannotator import CrowdLayerClassifier
 
 import mlflow
 
+def introduce_missing_annotations(y, percentage, missing_label=-1, random_state=None):
+    """
+    Randomly replace a specified proportion of annotations with `missing_label`.
+
+    Parameters
+    ----------
+    y : numpy.ndarray of shape (n_samples, n_annotators)
+        Annotation of each annotator for each sample.
+    percentage : float in [0, 1]
+        Percentage of annotations that should be replaced with `missing_label`.
+    missing_label : scalar or string or np.nan or None, optional (default=-1)
+        Value to represent a missing label.
+    random_state : int or None, optional (default=None)
+        Determines seed for reproducible results.
+
+
+    Returns
+    -------
+    y_missing : numpy.ndarray of shape (n_samples, n_annotators)
+        Annotations with randomly introduced missing labels.
+    """
+    y_missing = np.array(y.copy(), dtype=float)
+
+    if percentage >= 1:
+        no_missing_annotations = (y.shape[0] * y.shape[1]) - (y.shape[0] * percentage)
+    else:
+        no_missing_annotations = round((y.shape[0] * y.shape[1]) * percentage)
+
+    is_missing = np.zeros(y.shape[0] * y.shape[1], dtype=bool)
+    is_missing[:no_missing_annotations] = 1
+
+    random_state = check_random_state(random_state)
+    random_state.shuffle(is_missing)
+
+    is_missing = is_missing.reshape(y.shape)
+
+    y_missing[is_missing] = missing_label
+
+    return y_missing
 
 def load_dataset_letter(random_state=42):
     data_dir = 'dataset/letter'
-    X = np.load(f'{data_dir}/letter-X.npy')
-    y = np.load(f'{data_dir}/letter-y.npy')
-    y_true = np.load(f'{data_dir}/letter-y-true.npy')
+    # X = np.load(f'{data_dir}/letter-X.npy')
+    # y = np.load(f'{data_dir}/letter-y.npy')
+    X, y_true = fetch_openml(data_id=6, cache=True, return_X_y=True)
+    # y_true = np.load(f'{data_dir}/letter-y-true.npy')
+    X = X.values.astype(np.float32)
+    y_true = LabelEncoder().fit_transform(y_true.values)
+    y_new = torch.load(f'{data_dir}/letter-annot-mix.pt').numpy()
+    # print(y_new.shape)
 
-    X_train, X_test, y_train, y_test, y_train_true, y_test_true = train_test_split(X, y, y_true, test_size=0.2, random_state=random_state)
+    # X_train, X_test, y_train, y_test, y_train_true, y_test_true = train_test_split(X, y, y_true, test_size=0.2, random_state=random_state)
+    # X_train, X_test, y_train, y_test, y_train_true, y_test_true = train_test_split(X, y_new, y_true, test_size=0.2,
+    #                                                                                random_state=random_state)
+
+    train, test = train_test_split(
+        np.arange(len(y_true)), test_size=0.2, random_state=0, stratify=y_true
+    )
+    train, valid = train_test_split(
+        train, test_size=500, random_state=0, stratify=y_true[train]
+    )
+
+    X_train, y_train_true, X_test, y_test_true = X[train], y_true[train], X[test], y_true[test]
+    y_train, y_test = y_new[np.arange(len(train))], y_new[np.arange(len(train)+len(valid), len(y_true))]
     sc = StandardScaler().fit(X_train)
     X_train = sc.transform(X_train)
     X_test = sc.transform(X_test)
@@ -73,6 +131,7 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     seed_everything(seed)
     X_train, X_test, y_train, y_test, y_train_true, y_test_true = load_dataset_letter(seed)
+    y_train = introduce_missing_annotations(y_train, percentage=0.8, missing_label=MISSING_LABEL)
 
     dataset_classes = np.unique(y_test_true)
     n_classes = len(dataset_classes)
@@ -92,7 +151,7 @@ if __name__ == '__main__':
         }
         lr_scheduler = LRScheduler(policy="CosineAnnealingLR", T_max=hyper_dict['max_epochs'])
 
-        nn_name = 'lb'
+        nn_name = 'cl'
         if nn_name == 'cl':
             gt_net = ClassifierModule(n_classes=n_classes, n_features=n_features, dropout=0.5)
             net = CrowdLayerClassifier(
@@ -145,7 +204,6 @@ if __name__ == '__main__':
         train_accuracy = net.score(X_train, y_train_true)
 
         p_pred = net.predict_proba(X_test)
-        print(p_pred[0])
         test_accuracy = net.score(X_test, y_test_true)
         metrics = {
             'train_accuracy': train_accuracy,
