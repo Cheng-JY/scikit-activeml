@@ -10,3 +10,6 @@ ml_flow_tracking:
 
 dataset_file_path:
   local: '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/dataset/'
+
+output_file_path:
+  local: '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/output_image/'
