@@ -1,0 +1,9 @@
+hyper_parameter:
+  max_epochs: 50
+  batch_size: 64
+  lr: 0.01
+  optimizer__weight_decay: 0.0
+
+ml_flow_tracking:
+  experiment_name: ''
+  tracking_file_path: '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/tracking'
