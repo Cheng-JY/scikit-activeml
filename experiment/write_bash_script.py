@@ -13,7 +13,7 @@ def main(cfg):
     n_cycles = 25
     seed_list = [0, 1, 2, 3, 4]
 
-    file_path = "srun python/mnt/stud/home/jcheng/scikit-activeml/experiment/experiment.py"
+    file_path = "srun python /mnt/stud/home/jcheng/scikit-activeml/experiment/experiment.py"
 
     for instance_query_strategy in instance_query_strategies:
         for annotator_query_strategy in annotator_query_strategies:
