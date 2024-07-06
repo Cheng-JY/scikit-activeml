@@ -31,13 +31,13 @@ from query_utils import create_instance_query_strategy, get_annotator_performanc
 
 def parse_argument():
     parser = argparse.ArgumentParser(description='Evaluate model performance')
-    parser.add_argument('dataset', type=str, help='name of dataset')
-    parser.add_argument('instance_query_strategy', type=str, help='name of instance query strategy')
-    parser.add_argument('annotator_query_strategy', type=str, help='name of annotator query strategy')
-    parser.add_argument('batch_size', type=int, help='batch size')
-    parser.add_argument('n_annotators_per_sample', type=int, help='n_annotators_per_sample')
-    parser.add_argument('n_cycles', type=int, help='number of cycles')
-    parser.add_argument('seed', type=int, help='random seed')
+    parser.add_argument('--dataset', type=str, help='name of dataset')
+    parser.add_argument('--instance_query_strategy', type=str, help='name of instance query strategy')
+    parser.add_argument('--annotator_query_strategy', type=str, help='name of annotator query strategy')
+    parser.add_argument('--batch_size', type=int, help='batch size')
+    parser.add_argument('--n_annotators_per_sample', type=int, help='n_annotators_per_sample')
+    parser.add_argument('--n_cycles', type=int, help='number of cycles')
+    parser.add_argument('--seed', type=int, help='random seed')
     return parser
 
 
