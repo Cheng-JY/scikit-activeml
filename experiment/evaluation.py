@@ -42,8 +42,18 @@ def get_parse_argument(parser):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    parser = parse_argument()
-    experiment_params = get_parse_argument(parser)
+    # parser = parse_argument()
+    # experiment_params = get_parse_argument(parser)
+
+    experiment_params = {
+        'dataset_name': 'letter',
+        'instance_query_strategy': 'random',
+        'annotator_query_strategy': 'random',
+        'batch_size': 256,
+        'n_annotators_per_sample': 1,
+        'n_cycles': 25,
+        'graph_type': 'misclassification',
+    }
 
     ml_flow_tracking = cfg['ml_flow_tracking']
     mlflow.set_tracking_uri(uri=ml_flow_tracking['tracking_file_path'])
@@ -57,7 +67,7 @@ def main(cfg):
 
     df = df.loc[df['params.dataset_name'] == experiment_params['dataset_name']]
 
-    df = df.loc[df['params.dataset'] == experiment_params["dataset_name"]]
+    df = df.loc[df['params.dataset_name'] == experiment_params["dataset_name"]]
     instance_query_strategies = df['params.instance_query_strategy'].unique()
     annotator_query_strategies = df['params.annotator_query_strategy'].unique()
     n_annotators_per_sample_list = df['params.n_annotators_per_sample'].unique()
@@ -68,11 +78,11 @@ def main(cfg):
 
                 df_qs = df.loc[(df['params.instance_query_strategy'] == iqs_name) &
                                (df['params.annotator_query_strategy'] == aqs_name) &
-                               (df['params.n_per_sample'] == n_per_sample)]
+                               (df['params.n_annotators_per_sample'] == n_per_sample)]
                 r = []
                 for idx, row in df_qs.iterrows():
                     artifact = os.path.join(row.artifact_uri, 'result.csv')
-                    artifact = artifact.split("file://")[1]
+                    # artifact = artifact.split("file://")[1]
                     print(artifact)
                     print(os.path.exists(artifact))
                     if os.path.exists(artifact):
@@ -82,17 +92,17 @@ def main(cfg):
                 result = results.groupby(['step'])[experiment_params['graph_type']].agg(['mean', 'std']).set_axis(['mean', 'std'], axis=1)
                 result_mean = result['mean'].to_numpy()
                 result_std = result['std'].to_numpy()
+                label = (f'{experiment_params["instance_query_strategy"]} '
+                         f'+ {experiment_params["annotator_query_strategy"]} '
+                         f'+ {experiment_params["n_annotators_per_sample"]}')
                 plt.errorbar(np.arange(16, (len(result_mean) + 1) * 16, 16), result_mean, result_std,
-                             label=f"({np.mean(result_mean):.4f}) {qs_name}", alpha=0.3, color=color)
+                             label=f"({np.mean(result_mean):.4f}) {label}", alpha=0.3)
 
     plt.legend(bbox_to_anchor=(0.5, -0.35), loc='lower center', ncol=2)
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     plt.ylabel(f"{experiment_params['graph_type']}")
-    title = (f'{experiment_params["instance_query_strategy"]} '
-             f'+ {experiment_params["annotator_query_strategy"]} '
-             f'+ {experiment_params["dataset_name"]} '
-             f'+ {experiment_params["n_annotators_per_sample"]}')
+    title = f'{experiment_params["dataset_name"]}'
     plt.title(title)
     output_path = f'{cfg["output_file_path"]["local"]}/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")

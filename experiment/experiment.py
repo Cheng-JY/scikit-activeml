@@ -69,7 +69,7 @@ def main(cfg):
     experiment_params = {
         'dataset_name': 'letter',
         'instance_query_strategy': 'random',
-        'annotator_query_strategy': 'round-robin',
+        'annotator_query_strategy': 'random',
         'batch_size': 256,
         'n_annotators_per_sample': 1,
         'n_cycles': 25,
