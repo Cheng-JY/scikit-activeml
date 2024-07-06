@@ -56,7 +56,7 @@ def main(cfg):
     # }
 
     ml_flow_tracking = cfg['ml_flow_tracking']
-    mlflow.set_tracking_uri(uri=ml_flow_tracking['tracking_file_path'])
+    mlflow.set_tracking_uri(uri=ml_flow_tracking['tracking_file_path_server'])
     exp = mlflow.get_experiment_by_name(name=ml_flow_tracking["experiment_name"])
 
     df = mlflow.search_runs(experiment_ids=exp.experiment_id, output_format="pandas")
@@ -104,7 +104,7 @@ def main(cfg):
     plt.ylabel(f"{experiment_params['graph_type']}")
     title = f'{experiment_params["dataset_name"]}'
     plt.title(title)
-    output_path = f'{cfg["output_file_path"]["local"]}/{title}.pdf'
+    output_path = f'{cfg["output_file_path"]["server"]}/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
 
 
