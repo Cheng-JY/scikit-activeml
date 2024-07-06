@@ -4,7 +4,8 @@ import os
 import sys
 import warnings
 
-sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
+# sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
+sys.path.append("/Users/chengjiaying/PycharmProjects/scikit-activeml")
 warnings.filterwarnings("ignore")
 
 import matplotlib.pyplot as plt
@@ -31,13 +32,13 @@ from query_utils import create_instance_query_strategy, get_annotator_performanc
 
 def parse_argument():
     parser = argparse.ArgumentParser(description='Evaluate model performance')
-    parser.add_argument('--dataset', type=str, help='name of dataset')
-    parser.add_argument('--instance_query_strategy', type=str, help='name of instance query strategy')
-    parser.add_argument('--annotator_query_strategy', type=str, help='name of annotator query strategy')
-    parser.add_argument('--batch_size', type=int, help='batch size')
-    parser.add_argument('--n_annotators_per_sample', type=int, help='n_annotators_per_sample')
-    parser.add_argument('--n_cycles', type=int, help='number of cycles')
-    parser.add_argument('--seed', type=int, help='random seed')
+    parser.add_argument('dataset', type=str, help='name of dataset')
+    parser.add_argument('instance_query_strategy', type=str, help='name of instance query strategy')
+    parser.add_argument('annotator_query_strategy', type=str, help='name of annotator query strategy')
+    parser.add_argument('batch_size', type=int, help='batch size')
+    parser.add_argument('n_annotators_per_sample', type=int, help='n_annotators_per_sample')
+    parser.add_argument('n_cycles', type=int, help='number of cycles')
+    parser.add_argument('seed', type=int, help='random seed')
     return parser
 
 
@@ -71,19 +72,18 @@ def get_correct_label_ratio(y_partial, y_train_true, missing_label):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    parser = parse_argument()
-    experiment_params, master_random_state = get_parse_argument(parser)
+    print(cfg)
 
-    # experiment_params = {
-    #     'dataset_name': 'letter',
-    #     'instance_query_strategy': 'coreset',
-    #     'annotator_query_strategy': 'random',
-    #     'batch_size': 256,
-    #     'n_annotators_per_sample': 1,
-    #     'n_cycles': 25,
-    #     'seed': 0,
-    # }
-    # master_random_state = np.random.RandomState(experiment_params['seed'])
+    experiment_params = {
+        'dataset_name': cfg['dataset'],
+        'instance_query_strategy': cfg['instance_query_strategy'],
+        'annotator_query_strategy': cfg['annotator_query_strategy'],
+        'batch_size': cfg['batch_size'],
+        'n_annotators_per_sample': cfg['n_annotator_per_instance'],
+        'n_cycles': cfg['n_cycles'],
+        'seed': cfg['seed'],
+    }
+    master_random_state = np.random.RandomState(experiment_params['seed'])
 
     metric_dict = {
         'step': [],
@@ -97,7 +97,7 @@ def main(cfg):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # load dataset
-    data_dir = cfg['dataset_file_path']['server']
+    data_dir = cfg['dataset_file_path']['local']
     X_train, X_test, y_train, y_test, y_train_true, y_test_true = (
         load_dataset(name=experiment_params['dataset_name'], data_dir=data_dir))
 
@@ -139,7 +139,7 @@ def main(cfg):
     A = get_annotator_performance(experiment_params['annotator_query_strategy'], y_partial.shape)
 
     ml_flow_tracking = cfg['ml_flow_tracking']
-    mlflow.set_tracking_uri(uri=ml_flow_tracking["tracking_file_path_server"])
+    mlflow.set_tracking_uri(uri=ml_flow_tracking["tracking_file_path_local"])
     exp = mlflow.get_experiment_by_name(name=ml_flow_tracking["experiment_name"])
     experiment_id = mlflow.create_experiment(name=ml_flow_tracking["experiment_name"]) \
         if exp is None else exp.experiment_id
@@ -203,13 +203,6 @@ def main(cfg):
         outpath = active_run.info.artifact_uri
         outpath = os.path.join(outpath, 'result.csv')
         df.to_csv(outpath, index=False)
-        
-        plt.plot(metric_dict['misclassification'])
-        plt.title(f'{experiment_params["instance_query_strategy"]} '
-                  f'+ {experiment_params["annotator_query_strategy"]} '
-                  f'+ {experiment_params["dataset_name"]} '
-                  f'+ {experiment_params["n_annotators_per_sample"]}')
-        plt.show()
         return
 
 

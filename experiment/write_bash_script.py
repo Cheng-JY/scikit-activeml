@@ -20,13 +20,13 @@ def main(cfg):
             for n_annototar_per_instance in n_annototar_per_instance_list:
                 for seed in seed_list:
                     _bash = (f"{file_path} "
-                             f"dataset={dataset} "
-                             f"instance_query_strategy={instance_query_strategy} "
-                             f"annotator_query_strategy={annotator_query_strategy} "
-                             f"batch_size={batch_size} "
-                             f"n_annotator_per_instance={n_annototar_per_instance} "
-                             f"n_cycles={n_cycles} "
-                             f"seed={seed}")
+                             f"+dataset={dataset} "
+                             f"+instance_query_strategy={instance_query_strategy} "
+                             f"+annotator_query_strategy={annotator_query_strategy} "
+                             f"+batch_size={batch_size} "
+                             f"+n_annotator_per_instance={n_annototar_per_instance} "
+                             f"+n_cycles={n_cycles} "
+                             f"+seed={seed}")
                     bash_list.append(_bash)
 
     with open(f'{output_dir}/bash.txt', 'w', newline='') as bash_file:
