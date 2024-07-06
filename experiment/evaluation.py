@@ -42,18 +42,18 @@ def get_parse_argument(parser):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    # parser = parse_argument()
-    # experiment_params = get_parse_argument(parser)
+    parser = parse_argument()
+    experiment_params = get_parse_argument(parser)
 
-    experiment_params = {
-        'dataset_name': 'letter',
-        'instance_query_strategy': 'random',
-        'annotator_query_strategy': 'random',
-        'batch_size': 256,
-        'n_annotators_per_sample': 1,
-        'n_cycles': 25,
-        'graph_type': 'misclassification',
-    }
+    # experiment_params = {
+    #     'dataset_name': 'letter',
+    #     'instance_query_strategy': 'random',
+    #     'annotator_query_strategy': 'random',
+    #     'batch_size': 256,
+    #     'n_annotators_per_sample': 1,
+    #     'n_cycles': 25,
+    #     'graph_type': 'misclassification',
+    # }
 
     ml_flow_tracking = cfg['ml_flow_tracking']
     mlflow.set_tracking_uri(uri=ml_flow_tracking['tracking_file_path'])

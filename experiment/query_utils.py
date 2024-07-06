@@ -1,6 +1,6 @@
 import numpy as np
 
-from skactiveml.pool import UncertaintySampling, RandomSampling
+from skactiveml.pool import UncertaintySampling, RandomSampling, CoreSet
 
 
 def gen_seed(random_state:np.random.RandomState):
@@ -15,6 +15,7 @@ def create_instance_query_strategy(name, random_state, missing_label):
     query_strategy_factory_functions = {
         'random': lambda random_state: RandomSampling(random_state=gen_seed(random_state), missing_label=missing_label),
         'uncertainty': lambda random_state: UncertaintySampling(random_state=gen_seed(random_state), missing_label=missing_label),
+        'coreset': lambda random_state: CoreSet(random_state=gen_seed(random_state), missing_label=missing_label)
     }
     return query_strategy_factory_functions[name](random_state)
 

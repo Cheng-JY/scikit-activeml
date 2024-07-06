@@ -66,9 +66,12 @@ def get_correct_label_ratio(y_partial, y_train_true, missing_label):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
+    # parser = parse_argument()
+    # experiment_params, master_random_state = get_parse_argument(parser)
+
     experiment_params = {
         'dataset_name': 'letter',
-        'instance_query_strategy': 'random',
+        'instance_query_strategy': 'coreset',
         'annotator_query_strategy': 'random',
         'batch_size': 256,
         'n_annotators_per_sample': 1,
