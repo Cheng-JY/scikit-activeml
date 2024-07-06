@@ -2,6 +2,7 @@ import argparse
 import copy
 import os
 import sys
+import warnings
 
 sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
 warnings.filterwarnings("ignore")
