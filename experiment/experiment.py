@@ -97,7 +97,7 @@ def main(cfg):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # load dataset
-    data_dir = cfg['dataset_file_path']['local']
+    data_dir = cfg['dataset_file_path']['server']
     X_train, X_test, y_train, y_test, y_train_true, y_test_true = (
         load_dataset(name=experiment_params['dataset_name'], data_dir=data_dir))
 
@@ -139,7 +139,7 @@ def main(cfg):
     A = get_annotator_performance(experiment_params['annotator_query_strategy'], y_partial.shape)
 
     ml_flow_tracking = cfg['ml_flow_tracking']
-    mlflow.set_tracking_uri(uri=ml_flow_tracking["tracking_file_path_local"])
+    mlflow.set_tracking_uri(uri=ml_flow_tracking["tracking_file_path_server"])
     exp = mlflow.get_experiment_by_name(name=ml_flow_tracking["experiment_name"])
     experiment_id = mlflow.create_experiment(name=ml_flow_tracking["experiment_name"]) \
         if exp is None else exp.experiment_id
@@ -200,7 +200,8 @@ def main(cfg):
             is_ulbld = is_unlabeled(y_partial, missing_label=MISSING_LABEL)
         
         df = pd.DataFrame.from_dict(data=metric_dict)
-        outpath = active_run.info.artifact_uri
+        # outpath = active_run.info.artifact_uri
+        outpath = active_run.info.artifact_uri.split("file://")[1]
         outpath = os.path.join(outpath, 'result.csv')
         df.to_csv(outpath, index=False)
         return
