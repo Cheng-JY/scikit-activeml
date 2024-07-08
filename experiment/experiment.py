@@ -58,6 +58,17 @@ def main(cfg):
     }
     master_random_state = np.random.RandomState(experiment_params['seed'])
 
+    experiment_params = {
+        'dataset_name': 'letter',
+        'instance_query_strategy': cfg['instance_query_strategy'],
+        'annotator_query_strategy': cfg['annotator_query_strategy'],
+        'batch_size': cfg['batch_size'],
+        'n_annotators_per_sample': cfg['n_annotator_per_instance'],
+        'n_cycles': cfg['n_cycles'],
+        'seed': cfg['seed'],
+    }
+    master_random_state = np.random.RandomState(experiment_params['seed'])
+
     metric_dict = {
         'step': [],
         'misclassification': [],
