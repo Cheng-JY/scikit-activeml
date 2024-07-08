@@ -4,8 +4,8 @@ import os
 import sys
 import warnings
 
-# sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
-sys.path.append("/Users/chengjiaying/PycharmProjects/scikit-activeml")
+sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
+# sys.path.append("/Users/chengjiaying/PycharmProjects/scikit-activeml")
 warnings.filterwarnings("ignore")
 
 import matplotlib.pyplot as plt
@@ -200,8 +200,8 @@ def main(cfg):
             is_ulbld = is_unlabeled(y_partial, missing_label=MISSING_LABEL)
         
         df = pd.DataFrame.from_dict(data=metric_dict)
-        # outpath = active_run.info.artifact_uri
-        outpath = active_run.info.artifact_uri.split("file://")[1]
+        outpath = active_run.info.artifact_uri
+        print(active_run.info.artifact_uri)
         outpath = os.path.join(outpath, 'result.csv')
         df.to_csv(outpath, index=False)
         return
