@@ -24,9 +24,14 @@ def main(cfg):
     print(cfg)
 
     experiment_params = {
-        'dataset_name': cfg['dataset'],
-        'graph_type': cfg['graph_type'],
+        'dataset_name': 'letter',
+        'graph_type': 'misclassification',
     }
+
+    # experiment_params = {
+    #     'dataset_name': cfg['dataset'],
+    #     'graph_type': cfg['graph_type'],
+    # }
 
     ml_flow_tracking = cfg['ml_flow_tracking']
     mlflow.set_tracking_uri(uri=ml_flow_tracking['tracking_file_path_server'])
@@ -65,9 +70,9 @@ def main(cfg):
                 result = results.groupby(['step'])[experiment_params['graph_type']].agg(['mean', 'std']).set_axis(['mean', 'std'], axis=1)
                 result_mean = result['mean'].to_numpy()
                 result_std = result['std'].to_numpy()
-                label = (f'{experiment_params["instance_query_strategy"]} '
-                         f'+ {experiment_params["annotator_query_strategy"]} '
-                         f'+ {experiment_params["n_annotators_per_sample"]}')
+                label = (f'{iqs_name} '
+                         f'+ {aqs_name} '
+                         f'+ {n_per_sample}')
                 plt.errorbar(np.arange(16, (len(result_mean) + 1) * 16, 16), result_mean, result_std,
                              label=f"({np.mean(result_mean):.4f}) {label}", alpha=0.3)
 
