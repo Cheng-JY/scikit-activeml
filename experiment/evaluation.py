@@ -19,46 +19,14 @@ mlp.rcParams["figure.facecolor"] = "white"
 warnings.filterwarnings("ignore")
 
 
-def parse_argument():
-    parser = argparse.ArgumentParser(description='Evaluate model performance')
-    parser.add_argument('dataset', type=str, help='name of dataset')
-    parser.add_argument('instance_query_strategy', type=str, help='name of instance query strategy')
-    parser.add_argument('annotator_query_strategy', type=str, help='name of annotator query strategy')
-    parser.add_argument('batch_size', type=int, help='batch size')
-    parser.add_argument('n_annotators_per_sample', type=int, help='n_annotators_per_sample')
-    parser.add_argument('n_cycles', type=int, help='number of cycles')
-    parser.add_argument('graph_type', type=str, help='graph_type')
-    return parser
-
-
-def get_parse_argument(parser):
-    args = parser.parse_args()
-    experiment_params = {
-        'dataset_name': args.dataset,
-        'instance_query_strategy': args.instance_query_strategy,
-        'annotator_query_strategy': args.annotator_query_strategy,
-        'batch_size': args.batch_size,
-        'n_annotators_per_sample': args.n_annotators_per_sample,
-        'n_cycles': args.n_cycles,
-        'graph_type': args.graph_type,
-    }
-    return experiment_params
-
-
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    parser = parse_argument()
-    experiment_params = get_parse_argument(parser)
+    print(cfg)
 
-    # experiment_params = {
-    #     'dataset_name': 'letter',
-    #     'instance_query_strategy': 'random',
-    #     'annotator_query_strategy': 'random',
-    #     'batch_size': 256,
-    #     'n_annotators_per_sample': 1,
-    #     'n_cycles': 25,
-    #     'graph_type': 'misclassification',
-    # }
+    experiment_params = {
+        'dataset_name': cfg['dataset'],
+        'graph_type': cfg['graph_type'],
+    }
 
     ml_flow_tracking = cfg['ml_flow_tracking']
     mlflow.set_tracking_uri(uri=ml_flow_tracking['tracking_file_path_server'])

@@ -30,33 +30,6 @@ from utils import load_dataset
 from query_utils import create_instance_query_strategy, get_annotator_performance, gen_random_state
 
 
-def parse_argument():
-    parser = argparse.ArgumentParser(description='Evaluate model performance')
-    parser.add_argument('dataset', type=str, help='name of dataset')
-    parser.add_argument('instance_query_strategy', type=str, help='name of instance query strategy')
-    parser.add_argument('annotator_query_strategy', type=str, help='name of annotator query strategy')
-    parser.add_argument('batch_size', type=int, help='batch size')
-    parser.add_argument('n_annotators_per_sample', type=int, help='n_annotators_per_sample')
-    parser.add_argument('n_cycles', type=int, help='number of cycles')
-    parser.add_argument('seed', type=int, help='random seed')
-    return parser
-
-
-def get_parse_argument(parser):
-    args = parser.parse_args()
-    experiment_params = {
-        'dataset_name': args.dataset,
-        'instance_query_strategy': args.instance_query_strategy,
-        'annotator_query_strategy': args.annotator_query_strategy,
-        'batch_size': args.batch_size,
-        'n_annotators_per_sample': args.n_annotators_per_sample,
-        'n_cycles': args.n_cycles,
-        'seed': args.seed,
-    }
-    master_random_state = np.random.RandomState(experiment_params['seed'])
-    return experiment_params, master_random_state
-
-
 def seed_everything(seed=42):
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -127,7 +100,7 @@ def main(cfg):
     metric_dict['erorr_annotation_rate'].append(1 - correct_label_ratio)
 
     # Create query strategy
-    sa_qs = create_instance_query_strategy('random', random_state=gen_random_state(master_random_state), missing_label=MISSING_LABEL)
+    sa_qs = create_instance_query_strategy(experiment_params['instance_query_strategy'], random_state=gen_random_state(master_random_state), missing_label=MISSING_LABEL)
     ma_qs = SingleAnnotatorWrapper(sa_qs, random_state=gen_random_state(master_random_state), missing_label=MISSING_LABEL)
 
     candidate_indices = np.arange(n_samples)
