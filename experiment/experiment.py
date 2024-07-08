@@ -47,7 +47,7 @@ def get_correct_label_ratio(y_partial, y_train_true, missing_label):
 def main(cfg):
     print(cfg)
 
-    runing_device = 'local'
+    running_device = 'local'
 
     # experiment_params = {
     #     'dataset_name': cfg['dataset'],
@@ -83,7 +83,7 @@ def main(cfg):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # load dataset
-    data_dir = cfg['dataset_file_path'][runing_device]
+    data_dir = cfg['dataset_file_path'][running_device]
     X_train, X_test, y_train, y_test, y_train_true, y_test_true = (
         load_dataset(name=experiment_params['dataset_name'], data_dir=data_dir))
 
@@ -99,7 +99,7 @@ def main(cfg):
 
     # randomly add missing labels
     y_partial = np.full_like(y_train, fill_value=MISSING_LABEL)
-    initial_label_size = 100
+    initial_label_size = 128
 
     for a_idx in range(n_annotators):
         random_state = np.random.RandomState(a_idx)
@@ -125,7 +125,7 @@ def main(cfg):
     A = get_annotator_performance(experiment_params['annotator_query_strategy'], y_partial.shape)
 
     ml_flow_tracking = cfg['ml_flow_tracking']
-    mlflow.set_tracking_uri(uri=ml_flow_tracking[f"tracking_file_path_{runing_device}"])
+    mlflow.set_tracking_uri(uri=ml_flow_tracking[f"tracking_file_path_{running_device}"])
     exp = mlflow.get_experiment_by_name(name=ml_flow_tracking["experiment_name"])
     experiment_id = mlflow.create_experiment(name=ml_flow_tracking["experiment_name"]) \
         if exp is None else exp.experiment_id
@@ -144,16 +144,21 @@ def main(cfg):
                 is_ulbld_query = np.copy(is_ulbld)
                 is_candidate = is_ulbld_query.all(axis=-1)
                 candidates = candidate_indices[is_candidate]
+                query_params_dict = {}
+                if experiment_params['instance_query_strategy'] == "uncertainty":
+                    query_params_dict = {"clf": net, "fit_clf": False}
                 query_indices = call_func(
                     ma_qs.query,
                     X=X_train,
                     y=y_partial,
-                    candidates=candidates,
                     clf=net,
+                    candidates=candidates,
                     A_perf=A_perf[candidates],
                     batch_size=experiment_params['batch_size'],
                     n_annotators_per_sample=experiment_params['n_annotators_per_sample'],
+                    query_params_dict=query_params_dict,
                 )
+                print(idx(query_indices))
                 y_partial[idx(query_indices)] = y_train[idx(query_indices)]
                 correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
                 metric_dict['erorr_annotation_rate'].append(correct_label_ratio)
@@ -166,19 +171,22 @@ def main(cfg):
                 classes=classes,
                 missing_label=MISSING_LABEL,
                 cost_matrix=None,
-                random_state=experiment_params['seed'] + c,
+                random_state=experiment_params['seed'],
                 criterion=nn.CrossEntropyLoss(),
                 train_split=None,
                 verbose=False,
                 optimizer=torch.optim.RAdam,
                 device=device,
                 callbacks=[lr_scheduler],
-                **hyper_parameter
+                **hyper_parameter,
             )
 
             y_agg = majority_vote(y_partial, classes=classes, missing_label=MISSING_LABEL,
                                   random_state=experiment_params['seed'] + c)
-            net.fit(X_train, y_agg)
+            if c > 7:
+                net.fit(X_train, y_agg)
+            else:
+                net.fit(X_train, y_agg)
 
             accuracy = net.score(X_test, y_test_true)
             metric_dict['misclassification'].append(1 - accuracy)
