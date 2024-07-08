@@ -101,20 +101,24 @@ def main(cfg):
     y_partial = np.full_like(y_train, fill_value=MISSING_LABEL)
     initial_label_size = 128
 
-    for a_idx in range(n_annotators):
-        random_state = np.random.RandomState(a_idx)
-        is_lbld_a = is_labeled(y_train[:, a_idx], missing_label=MISSING_LABEL)
-        p_a = is_lbld_a / is_lbld_a.sum()
-        initial_label_size = min(initial_label_size, is_lbld_a.sum())
-        selected_idx_a = random_state.choice(np.arange(n_samples), size=initial_label_size, p=p_a, replace=False)
-        y_partial[selected_idx_a, a_idx] = y_train[selected_idx_a, a_idx]
-
-    correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
-    metric_dict['erorr_annotation_rate'].append(1 - correct_label_ratio)
+    # for a_idx in range(n_annotators):
+    #     random_state = np.random.RandomState(a_idx)
+    #     is_lbld_a = is_labeled(y_train[:, a_idx], missing_label=MISSING_LABEL)
+    #     p_a = is_lbld_a / is_lbld_a.sum()
+    #     initial_label_size = min(initial_label_size, is_lbld_a.sum())
+    #     selected_idx_a = random_state.choice(np.arange(n_samples), size=initial_label_size, p=p_a, replace=False)
+    #     y_partial[selected_idx_a, a_idx] = y_train[selected_idx_a, a_idx]
+    #
+    # correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
+    # metric_dict['erorr_annotation_rate'].append(1 - correct_label_ratio)
 
     # Create query strategy
     sa_qs = create_instance_query_strategy(experiment_params['instance_query_strategy'], random_state=gen_random_state(master_random_state), missing_label=MISSING_LABEL)
     ma_qs = SingleAnnotatorWrapper(sa_qs, random_state=gen_random_state(master_random_state), missing_label=MISSING_LABEL)
+    sa_init = create_instance_query_strategy('random', random_state=gen_random_state(master_random_state),
+                                             missing_label=MISSING_LABEL)
+    ma_init = SingleAnnotatorWrapper(sa_init, random_state=gen_random_state(master_random_state),
+                                   missing_label=MISSING_LABEL)
 
     candidate_indices = np.arange(n_samples)
 
@@ -134,7 +138,18 @@ def main(cfg):
         mlflow.log_params(experiment_params)
 
         for c in range(experiment_params['n_cycles'] + 1):
-            if c > 0:
+            if c == 0:
+                query_indices = call_func(
+                    ma_init.query,
+                    X=X_train,
+                    y=y_partial,
+                    batch_size=experiment_params['batch_size'],
+                    n_annotators_per_sample=experiment_params['n_annotators_per_sample'],
+                )
+                y_partial[idx(query_indices)] = y_train[idx(query_indices)]
+                correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
+                metric_dict['erorr_annotation_rate'].append(correct_label_ratio)
+            else:
                 if experiment_params['annotator_query_strategy'] == 'random':
                     A_perf = A
                 elif experiment_params['annotator_query_strategy'] == 'round-robin':
@@ -151,14 +166,12 @@ def main(cfg):
                     ma_qs.query,
                     X=X_train,
                     y=y_partial,
-                    clf=net,
                     candidates=candidates,
                     A_perf=A_perf[candidates],
                     batch_size=experiment_params['batch_size'],
                     n_annotators_per_sample=experiment_params['n_annotators_per_sample'],
                     query_params_dict=query_params_dict,
                 )
-                print(idx(query_indices))
                 y_partial[idx(query_indices)] = y_train[idx(query_indices)]
                 correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
                 metric_dict['erorr_annotation_rate'].append(correct_label_ratio)
@@ -183,10 +196,8 @@ def main(cfg):
 
             y_agg = majority_vote(y_partial, classes=classes, missing_label=MISSING_LABEL,
                                   random_state=experiment_params['seed'] + c)
-            if c > 7:
-                net.fit(X_train, y_agg)
-            else:
-                net.fit(X_train, y_agg)
+
+            net.fit(X_train, y_agg)
 
             accuracy = net.score(X_test, y_test_true)
             metric_dict['misclassification'].append(1 - accuracy)
