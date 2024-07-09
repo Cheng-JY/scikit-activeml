@@ -32,7 +32,7 @@ def main(cfg):
 
     experiment_params = {
         'dataset_name': cfg['dataset'],
-        'graph_type': cfg['graph_type'],
+        'graph_type': "error_annotation_rate",
     }
 
     ml_flow_tracking = cfg['ml_flow_tracking']
@@ -84,7 +84,7 @@ def main(cfg):
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     plt.ylabel(f"{experiment_params['graph_type']}")
-    title = f'{experiment_params["dataset_name"]}'
+    title = f'{experiment_params["dataset_name"]}_{experiment_params["graph_type"]}'
     plt.title(title)
     output_path = f'{cfg["output_file_path"][running_device]}/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
