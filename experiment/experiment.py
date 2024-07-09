@@ -47,29 +47,29 @@ def get_correct_label_ratio(y_partial, y_train_true, missing_label):
 def main(cfg):
     print(cfg)
 
-    running_device = 'local'
-
-    # experiment_params = {
-    #     'dataset_name': cfg['dataset'],
-    #     'instance_query_strategy': cfg['instance_query_strategy'],
-    #     'annotator_query_strategy': cfg['annotator_query_strategy'],
-    #     'batch_size': cfg['batch_size'],
-    #     'n_annotators_per_sample': cfg['n_annotator_per_instance'],
-    #     'n_cycles': cfg['n_cycles'],
-    #     'seed': cfg['seed'],
-    # }
-    # master_random_state = np.random.RandomState(experiment_params['seed'])
+    running_device = 'server'
 
     experiment_params = {
-        'dataset_name': 'letter',
-        'instance_query_strategy': 'uncertainty',
-        'annotator_query_strategy': 'round-robin',
-        'batch_size': 256,
-        'n_annotators_per_sample': 1,
-        'n_cycles': 25,
-        'seed': 0,
+        'dataset_name': cfg['dataset'],
+        'instance_query_strategy': cfg['instance_query_strategy'],
+        'annotator_query_strategy': cfg['annotator_query_strategy'],
+        'batch_size': cfg['batch_size'],
+        'n_annotators_per_sample': cfg['n_annotator_per_instance'],
+        'n_cycles': cfg['n_cycles'],
+        'seed': cfg['seed'],
     }
     master_random_state = np.random.RandomState(experiment_params['seed'])
+
+    # experiment_params = {
+    #     'dataset_name': 'letter',
+    #     'instance_query_strategy': 'random',
+    #     'annotator_query_strategy': 'round-robin',
+    #     'batch_size': 256,
+    #     'n_annotators_per_sample': 1,
+    #     'n_cycles': 25,
+    #     'seed': 0,
+    # }
+    # master_random_state = np.random.RandomState(experiment_params['seed'])
 
     metric_dict = {
         'step': [],
@@ -138,11 +138,19 @@ def main(cfg):
         mlflow.log_params(experiment_params)
 
         for c in range(experiment_params['n_cycles'] + 1):
+            if experiment_params['annotator_query_strategy'] == 'random':
+                A_perf = A
+            elif experiment_params['annotator_query_strategy'] == 'round-robin':
+                A_perf = copy.deepcopy(A)
+                res_anno = (c * experiment_params['n_annotators_per_sample']) % n_annotators
+                A_perf[:, res_anno: res_anno + experiment_params['n_annotators_per_sample']] = 1
+
             if c == 0:
                 query_indices = call_func(
                     ma_init.query,
                     X=X_train,
                     y=y_partial,
+                    A_perf=A_perf,
                     batch_size=experiment_params['batch_size'],
                     n_annotators_per_sample=experiment_params['n_annotators_per_sample'],
                 )
@@ -150,12 +158,6 @@ def main(cfg):
                 correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
                 metric_dict['erorr_annotation_rate'].append(correct_label_ratio)
             else:
-                if experiment_params['annotator_query_strategy'] == 'random':
-                    A_perf = A
-                elif experiment_params['annotator_query_strategy'] == 'round-robin':
-                    A_perf = copy.deepcopy(A)
-                    res_anno = ((c-1) * experiment_params['n_annotators_per_sample']) % n_annotators
-                    A_perf[:, res_anno: res_anno+experiment_params['n_annotators_per_sample']] = 1
                 is_ulbld_query = np.copy(is_ulbld)
                 is_candidate = is_ulbld_query.all(axis=-1)
                 candidates = candidate_indices[is_candidate]
