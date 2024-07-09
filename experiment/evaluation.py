@@ -23,17 +23,17 @@ warnings.filterwarnings("ignore")
 def main(cfg):
     print(cfg)
 
-    running_device = 'local'
-
-    experiment_params = {
-        'dataset_name': 'letter',
-        'graph_type': 'misclassification',
-    }
+    running_device = 'server'
 
     # experiment_params = {
-    #     'dataset_name': cfg['dataset'],
-    #     'graph_type': cfg['graph_type'],
+    #     'dataset_name': 'letter',
+    #     'graph_type': 'misclassification',
     # }
+
+    experiment_params = {
+        'dataset_name': cfg['dataset'],
+        'graph_type': cfg['graph_type'],
+    }
 
     ml_flow_tracking = cfg['ml_flow_tracking']
     mlflow.set_tracking_uri(uri=ml_flow_tracking[f"tracking_file_path_{running_device}"])
