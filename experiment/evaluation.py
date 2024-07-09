@@ -23,6 +23,8 @@ warnings.filterwarnings("ignore")
 def main(cfg):
     print(cfg)
 
+    running_device = 'local'
+
     experiment_params = {
         'dataset_name': 'letter',
         'graph_type': 'misclassification',
@@ -34,7 +36,7 @@ def main(cfg):
     # }
 
     ml_flow_tracking = cfg['ml_flow_tracking']
-    mlflow.set_tracking_uri(uri=ml_flow_tracking['tracking_file_path_server'])
+    mlflow.set_tracking_uri(uri=ml_flow_tracking[f"tracking_file_path_{running_device}"])
     exp = mlflow.get_experiment_by_name(name=ml_flow_tracking["experiment_name"])
 
     df = mlflow.search_runs(experiment_ids=exp.experiment_id, output_format="pandas")
@@ -64,9 +66,11 @@ def main(cfg):
                     print(artifact)
                     print(os.path.exists(artifact))
                     if os.path.exists(artifact):
-                        result_qs = pd.read_csv(artifact, index_col=0)
+                        result_qs = pd.read_csv(artifact, index_col=None)
                         r.append(result_qs)
-                results = pd.concat(r)
+
+                if len(r) != 0:
+                    results = pd.concat(r)
                 result = results.groupby(['step'])[experiment_params['graph_type']].agg(['mean', 'std']).set_axis(['mean', 'std'], axis=1)
                 result_mean = result['mean'].to_numpy()
                 result_std = result['std'].to_numpy()
@@ -82,7 +86,7 @@ def main(cfg):
     plt.ylabel(f"{experiment_params['graph_type']}")
     title = f'{experiment_params["dataset_name"]}'
     plt.title(title)
-    output_path = f'{cfg["output_file_path"]["server"]}/{title}.pdf'
+    output_path = f'{cfg["output_file_path"][running_device]}/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
 
 
