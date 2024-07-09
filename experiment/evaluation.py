@@ -80,7 +80,7 @@ def main(cfg):
                 plt.errorbar(np.arange(16, (len(result_mean) + 1) * 16, 16), result_mean, result_std,
                              label=f"({np.mean(result_mean):.4f}) {label}", alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(0.5, -0.35), loc='lower center', ncol=2)
+    plt.legend(bbox_to_anchor=(0.5, -0.5), loc='lower center', ncol=2)
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     plt.ylabel(f"{experiment_params['graph_type']}")
