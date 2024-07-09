@@ -74,7 +74,7 @@ def main(cfg):
     metric_dict = {
         'step': [],
         'misclassification': [],
-        'erorr_annotation_rate': [],
+        'error_annotation_rate': [],
     }
 
     MISSING_LABEL = -1

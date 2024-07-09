@@ -32,7 +32,7 @@ def main(cfg):
 
     experiment_params = {
         'dataset_name': cfg['dataset'],
-        'graph_type': "error_annotation_rate",
+        'graph_type': cfg['graph_type'],
     }
 
     ml_flow_tracking = cfg['ml_flow_tracking']
