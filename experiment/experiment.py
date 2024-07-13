@@ -193,6 +193,7 @@ def main(cfg):
                 optimizer=torch.optim.RAdam,
                 device=device,
                 callbacks=[lr_scheduler],
+                iterator_train__drop_last=True,
                 **hyper_parameter,
             )
 
