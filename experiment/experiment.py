@@ -176,7 +176,7 @@ def main(cfg):
                 )
                 y_partial[idx(query_indices)] = y_train[idx(query_indices)]
                 correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
-                metric_dict['erorr_annotation_rate'].append(correct_label_ratio)
+                metric_dict['error_annotation_rate'].append(correct_label_ratio)
 
             net = SkorchClassifier(
                 TabularClassifierModule,
