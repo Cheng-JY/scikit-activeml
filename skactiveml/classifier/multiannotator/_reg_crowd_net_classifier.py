@@ -132,7 +132,7 @@ class RegCrowdNetClassifier(SkorchClassifier, AnnotatorModelMixin):
         p_perf_numpy = p_perf.detach().numpy()
         if return_confusion_matrix:
             return p_perf_numpy
-        perf = p_perf.diagonal(offset=0, dim1=-2, dim2=-1).sum(-1).mean()
+        perf = p_perf.diagonal(offset=0, dim1=-2, dim2=-1).sum(dim=1)
         return perf.detach().numpy()
 
 

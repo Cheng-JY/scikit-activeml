@@ -131,8 +131,9 @@ if __name__ == '__main__':
         }
         mlflow.log_metrics(metrics)
         print(metrics)
+        print(net.ap_confs)
         annot_pref = net.predict_annotator_perf(False)
-        print(annot_pref.shape)
+        print(annot_pref)
         confusion_pref = net.predict_annotator_perf(True)
         print(confusion_pref.shape)
 
