@@ -72,7 +72,7 @@ if __name__ == '__main__':
     data_dir = "/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/dataset"
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     seed_everything(seed)
-    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me(data_dir)
+    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music(data_dir)
 
     dataset_classes = np.unique(y_test_true)
     n_classes = len(dataset_classes)
@@ -131,6 +131,8 @@ if __name__ == '__main__':
         }
         mlflow.log_metrics(metrics)
         print(metrics)
+        annot_pref = net.predict_annotator_perf(False)
+        print(annot_pref.shape)
 
         history = net.history
         train_loss = history[:, 'train_loss']
