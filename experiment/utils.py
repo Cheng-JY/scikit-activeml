@@ -1,5 +1,24 @@
 import mlflow
 import pandas as pd
+import numpy as np
+
+
+def load_dataset(name, data_dir):
+    if name == 'letter':
+        return load_dataset_letter(data_dir)
+
+
+def load_dataset_letter(data_dir, random_state=42):
+    X = np.load(f'{data_dir}/letter/letter-X.npy').astype(np.float32)
+    y = np.load(f'{data_dir}/letter/letter-y.npy')
+    y_true = np.load(f'{data_dir}/letter/letter-y-true.npy')
+
+    X_train, X_test, y_train, y_test, y_train_true, y_test_true = train_test_split(X, y, y_true, test_size=0.2,
+                                                                                   random_state=random_state)
+    sc = StandardScaler().fit(X_train)
+    X_train = sc.transform(X_train)
+    X_test = sc.transform(X_test)
+    return X_train, X_test, y_train, y_test, y_train_true, y_test_true
 
 def get_experiment_result(uri, experiment_name, path, train_name):
     mlflow.set_tracking_uri(uri=uri)
