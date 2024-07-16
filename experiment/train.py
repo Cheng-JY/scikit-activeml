@@ -133,6 +133,8 @@ if __name__ == '__main__':
         print(metrics)
         annot_pref = net.predict_annotator_perf(False)
         print(annot_pref.shape)
+        confusion_pref = net.predict_annotator_perf(True)
+        print(confusion_pref.shape)
 
         history = net.history
         train_loss = history[:, 'train_loss']
