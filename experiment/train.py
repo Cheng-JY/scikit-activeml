@@ -8,20 +8,17 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.utils import check_random_state
 from skorch.callbacks import LRScheduler
 
-from skactiveml.utils import majority_vote
-
 import numpy as np
 import pandas as pd
 
 import torch
 from torch import nn
 
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-from skactiveml.classifier import SkorchClassifier
-from skactiveml.classifier.multiannotator import CrowdLayerClassifier
+from skactiveml.classifier.multiannotator import RegCrowdNetClassifier
 
 import mlflow
+from utils import *
 
 sys.path.append('../../..')
 
@@ -55,6 +52,7 @@ class GT_Embed_Module(nn.Module):
 
         return embed_x
 
+
 class GT_Output_Module(nn.Module):
     def __init__(self, n_classes):
         super(GT_Output_Module, self).__init__()
@@ -71,17 +69,17 @@ if __name__ == '__main__':
     seed = 0
     MISSING_LABEL = -1
 
+    data_dir = "/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/dataset"
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     seed_everything(seed)
-    X_train, X_test, y_train, y_test, y_train_true, y_test_true = load_dataset_letter(seed)
-    y_train = introduce_missing_annotations(y_train, percentage=0.8, missing_label=MISSING_LABEL)
+    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me(data_dir)
 
     dataset_classes = np.unique(y_test_true)
     n_classes = len(dataset_classes)
     n_features = X_train.shape[1]
     n_annotators = y_train.shape[1]
 
-    mlflow.set_tracking_uri(uri='/Users/chengjiaying/PycharmProjects/scikit-activeml/tutorials/tracking')
+    mlflow.set_tracking_uri(uri='/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/tracking')
     exp = mlflow.get_experiment_by_name(name='Letter-Training')
     experiment_id = mlflow.create_experiment(name='Letter-Training') if exp is None else exp.experiment_id
 
@@ -94,49 +92,27 @@ if __name__ == '__main__':
         }
         lr_scheduler = LRScheduler(policy="CosineAnnealingLR", T_max=hyper_dict['max_epochs'])
 
-        nn_name = 'cl'
-        if nn_name == 'cl':
-            gt_net = ClassifierModule(n_classes=n_classes, n_features=n_features, dropout=0.5)
-            net = CrowdLayerClassifier(
-                module__n_classes=n_classes,
-                module__n_annotators=n_annotators,
-                module__gt_net=gt_net,
-                classes=dataset_classes,
-                missing_label=MISSING_LABEL,
-                cost_matrix=None,
-                random_state=seed,
-                train_split=None,
-                verbose=False,
-                optimizer=torch.optim.RAdam,
-                device=device,
-                callbacks=[lr_scheduler],
-                **hyper_dict
-            )
-        elif nn_name == 'ub' or nn_name == 'lb':
-            net = SkorchClassifier(
-                ClassifierModule,
-                module__n_classes=n_classes,
-                module__n_features=n_features,
-                module__dropout=0.5,
-                classes=dataset_classes,
-                missing_label=MISSING_LABEL,
-                cost_matrix=None,
-                random_state=1,
-                criterion=nn.CrossEntropyLoss(),
-                train_split=None,
-                verbose=False,
-                optimizer=torch.optim.RAdam,
-                device=device,
-                callbacks=[lr_scheduler],
-                **hyper_dict
-            )
-            if nn_name == 'ub':
-                y_train = y_train_true
-            elif nn_name == 'lb':
-                y_train = majority_vote(y_train, classes=dataset_classes, missing_label=-1)
-                print(accuracy_score(y_train, y_train_true))
-
-        hyper_dict['nn_name'] = nn_name
+        regularization = "geo-reg-w"
+        gt_net = GT_Embed_Module(n_features=n_features, dropout=0.5)
+        output_net = GT_Output_Module(n_classes=n_classes)
+        net = RegCrowdNetClassifier(
+            module__gt_embed_x=gt_net,
+            module__gt_output=output_net,
+            n_classes=n_classes,
+            n_annotators=n_annotators,
+            classes=dataset_classes,
+            missing_label=MISSING_LABEL,
+            cost_matrix=None,
+            random_state=seed,
+            train_split=None,
+            verbose=False,
+            optimizer=torch.optim.RAdam,
+            device=device,
+            callbacks=[lr_scheduler],
+            lmbda="auto",
+            regularization=regularization,
+            **hyper_dict
+        )
         hyper_dict['seed'] = seed
         mlflow.log_params(hyper_dict)
 

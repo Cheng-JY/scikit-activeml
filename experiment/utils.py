@@ -2,6 +2,9 @@ import mlflow
 import pandas as pd
 import numpy as np
 
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
 
 def load_dataset(name, data_dir):
     if name == 'letter':
@@ -19,6 +22,36 @@ def load_dataset_letter(data_dir, random_state=42):
     X_train = sc.transform(X_train)
     X_test = sc.transform(X_test)
     return X_train, X_test, y_train, y_test, y_train_true, y_test_true
+
+
+def load_dataset_music(data_dir):
+    X_train = np.load(f'{data_dir}/music/music-X.npy')
+    y_train = np.load(f'{data_dir}/music/music-y.npy')
+    y_train_true = np.load(f'{data_dir}/music/music-y-true.npy')
+    X_valid = np.load(f'{data_dir}/music/music-X-valid.npy')
+    y_valid_true = np.load(f'{data_dir}/music/music-y-true-valid.npy')
+    X_test = np.load(f'{data_dir}/music/music-X-test.npy')
+    y_test_true = np.load(f'{data_dir}/music/music-y-true-test.npy')
+
+    sc = StandardScaler().fit(X_train)
+    X_train = sc.transform(X_train)
+    X_valid = sc.transform(X_valid)
+    X_test = sc.transform(X_test)
+
+    return X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true
+
+
+def load_dataset_label_me(data_dir):
+    X_train = np.load(f'{data_dir}/label-me/label-me-X.npy')
+    y_train = np.load(f'{data_dir}/label-me/label-me-y.npy')
+    y_train_true = np.load(f'{data_dir}/label-me/label-me-y-true.npy')
+    X_valid = np.load(f'{data_dir}/label-me/label-me-X-valid.npy')
+    y_valid_true = np.load(f'{data_dir}/label-me/label-me-y-true-valid.npy')
+    X_test = np.load(f'{data_dir}/label-me/label-me-X-test.npy')
+    y_test_true = np.load(f'{data_dir}/label-me/label-me-y-true-test.npy')
+
+    return X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true
+
 
 def get_experiment_result(uri, experiment_name, path, train_name):
     mlflow.set_tracking_uri(uri=uri)
