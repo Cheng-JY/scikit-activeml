@@ -1,11 +1,10 @@
-import argparse
 import copy
 import os
 import sys
 import warnings
 
-sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
-# sys.path.append("/Users/chengjiaying/PycharmProjects/scikit-activeml")
+# sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
+sys.path.append("/Users/chengjiaying/PycharmProjects/scikit-activeml")
 warnings.filterwarnings("ignore")
 
 import matplotlib.pyplot as plt
@@ -17,6 +16,7 @@ import pandas as pd
 from copy import deepcopy
 
 from skactiveml.classifier import SkorchClassifier
+from skactiveml.classifier.multiannotator import RegCrowdNetClassifier
 from skactiveml.pool.multiannotator import SingleAnnotatorWrapper
 from skactiveml.utils import majority_vote, is_labeled, is_unlabeled, call_func
 
@@ -134,7 +134,7 @@ def main(cfg):
                 res_anno = ((c-1) * experiment_params['n_annotators_per_sample']) % n_annotators
                 A_perf[:, res_anno: res_anno + experiment_params['n_annotators_per_sample']] = 1
             elif experiment_params['annotator_query_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
-                A_perf = clf.pr
+                A_pref = net.predict_annotator_perf() if c > 0 else A
 
             if c > 0:
                 is_ulbld_query = np.copy(is_ulbld)
@@ -153,7 +153,6 @@ def main(cfg):
                     n_annotators_per_sample=experiment_params['n_annotators_per_sample'],
                     **query_params_dict,
                 )
-                print("hi here")
                 y_partial[idx(query_indices)] = y_train[idx(query_indices)]
 
             number_annotation_annotator, number_correct_label_annotator, correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
@@ -162,24 +161,27 @@ def main(cfg):
                 metric_dict[f"Number_of_annotations_{i}"].append(number_annotation_annotator[i])
                 metric_dict[f"Number_of_correct_annotation_{i}"].append(number_correct_label_annotator[i])
 
-            net = SkorchClassifier(
-                TabularClassifierModule,
-                module__n_classes=n_classes,
-                module__n_features=n_features,
-                module__dropout=0.5,
-                classes=classes,
-                missing_label=MISSING_LABEL,
-                cost_matrix=None,
-                random_state=experiment_params['seed'],
-                criterion=nn.CrossEntropyLoss(),
-                train_split=None,
-                verbose=False,
-                optimizer=torch.optim.RAdam,
-                device=device,
-                callbacks=[lr_scheduler],
-                iterator_train__drop_last=True,
-                **hyper_parameter,
-            )
+            if experiment_params['annotator_query_strategy'] in ["random", "round-robin"]:
+                net = SkorchClassifier(
+                    TabularClassifierModule,
+                    module__n_classes=n_classes,
+                    module__n_features=n_features,
+                    module__dropout=0.5,
+                    classes=classes,
+                    missing_label=MISSING_LABEL,
+                    cost_matrix=None,
+                    random_state=experiment_params['seed'],
+                    criterion=nn.CrossEntropyLoss(),
+                    train_split=None,
+                    verbose=False,
+                    optimizer=torch.optim.RAdam,
+                    device=device,
+                    callbacks=[lr_scheduler],
+                    iterator_train__drop_last=True,
+                    **hyper_parameter,
+                )
+            elif experiment_params['annotator_query_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
+                pass
 
             y_agg = majority_vote(y_partial, classes=classes, missing_label=MISSING_LABEL,
                                   random_state=experiment_params['seed'] + c)
