@@ -15,6 +15,8 @@ from skactiveml.utils import is_labeled
 def load_dataset(name, data_dir, random_state=42):
     if name == 'letter':
         return load_dataset_letter(data_dir)
+    elif name == 'letter_pref':
+        return load_dataset_letter_pref(data_dir)
 
 
 def load_dataset_letter(data_dir, random_state=42):
@@ -55,9 +57,8 @@ def load_dataset_letter_pref(data_dir, random_state=42):
 
     X = np.load(f'{data_dir}/letter/letter-X.npy').astype(np.float32)
     y_true = np.load(f'{data_dir}/letter/letter-y-true.npy')
-    y = np.tile(y_true, 4)
     zero_array = np.zeros_like(y_true)
-    y = np.concatenate((y, zero_array))
+    y = np.array([y_true, y_true, zero_array], dtype=float).T
 
     X_train, X_test, y_train, y_test, y_train_true, y_test_true = train_test_split(X, y, y_true, test_size=0.2,
                                                                                    random_state=random_state)

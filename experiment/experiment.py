@@ -25,7 +25,7 @@ from skorch.callbacks import LRScheduler
 import torch
 from torch import nn
 
-from classifier.classifier import TabularClassifierModule
+from classifier.classifier import TabularClassifierModule, TabularClassifierGetEmbedXModule, TabularClassifierGetOutputModule
 from utils import *
 from query_utils import create_instance_query_strategy, get_annotator_performance, gen_random_state
 
@@ -53,9 +53,9 @@ def main(cfg):
         master_random_state = np.random.RandomState(experiment_params['seed'])
     else:
         experiment_params = {
-            'dataset_name': 'letter',
+            'dataset_name': 'letter_pref',
             'instance_query_strategy': "uncertainty",
-            'annotator_query_strategy': 'round-robin',
+            'annotator_query_strategy': "trace-reg",
             'batch_size': 256,
             'n_annotators_per_sample': 1,
             'n_cycles': 25,
@@ -129,12 +129,14 @@ def main(cfg):
         for c in range(experiment_params['n_cycles'] + 1):
             if experiment_params['annotator_query_strategy'] == 'random':
                 A_perf = A
+                A_perf = A_perf[candidates]
             elif experiment_params['annotator_query_strategy'] == 'round-robin':
                 A_perf = copy.deepcopy(A)
                 res_anno = ((c-1) * experiment_params['n_annotators_per_sample']) % n_annotators
                 A_perf[:, res_anno: res_anno + experiment_params['n_annotators_per_sample']] = 1
+                A_perf = A_perf[candidates]
             elif experiment_params['annotator_query_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
-                A_pref = net.predict_annotator_perf() if c > 0 else A
+                A_perf = net.predict_annotator_perf() if c > 0 else A
 
             if c > 0:
                 is_ulbld_query = np.copy(is_ulbld)
@@ -148,7 +150,7 @@ def main(cfg):
                     X=X_train,
                     y=y_partial,
                     candidates=candidates,
-                    A_perf=A_perf[candidates],
+                    A_perf=A_perf,
                     batch_size=experiment_params['batch_size'],
                     n_annotators_per_sample=experiment_params['n_annotators_per_sample'],
                     **query_params_dict,
@@ -180,13 +182,33 @@ def main(cfg):
                     iterator_train__drop_last=True,
                     **hyper_parameter,
                 )
+                y_agg = majority_vote(y_partial, classes=classes, missing_label=MISSING_LABEL,
+                                      random_state=experiment_params['seed'] + c)
+
+                net.fit(X_train, y_agg)
             elif experiment_params['annotator_query_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
-                pass
-
-            y_agg = majority_vote(y_partial, classes=classes, missing_label=MISSING_LABEL,
-                                  random_state=experiment_params['seed'] + c)
-
-            net.fit(X_train, y_agg)
+                gt_net = TabularClassifierGetEmbedXModule(n_features=n_features, dropout=0.5)
+                output_net = TabularClassifierGetOutputModule(n_classes=n_classes)
+                net = RegCrowdNetClassifier(
+                    module__gt_embed_x=gt_net,
+                    module__gt_output=output_net,
+                    n_classes=n_classes,
+                    n_annotators=n_annotators,
+                    classes=classes,
+                    missing_label=MISSING_LABEL,
+                    cost_matrix=None,
+                    random_state=experiment_params['seed'],
+                    train_split=None,
+                    verbose=False,
+                    optimizer=torch.optim.RAdam,
+                    device=device,
+                    callbacks=[lr_scheduler],
+                    lmbda="auto",
+                    regularization=experiment_params['annotator_query_strategy'],
+                    iterator_train__drop_last=True,
+                    **hyper_parameter,
+                )
+                net.fit(X_train, y_partial)
 
             accuracy = net.score(X_test, y_test_true)
             metric_dict['misclassification'].append(1 - accuracy)
