@@ -26,7 +26,7 @@ import torch
 from torch import nn
 
 from classifier.classifier import TabularClassifierModule
-from utils import load_dataset
+from utils import *
 from query_utils import create_instance_query_strategy, get_annotator_performance, gen_random_state
 
 
@@ -35,41 +35,34 @@ def seed_everything(seed=42):
     torch.manual_seed(seed)
 
 
-def get_correct_label_ratio(y_partial, y_train_true, missing_label):
-    is_lbld = is_labeled(y_partial, missing_label=missing_label)
-    y_true = np.array([y_train_true for _ in range(y_partial.shape[1])]).T
-    correct_label_ration = is_lbld * (y_partial == y_true)
-    correct_label_ration = correct_label_ration.sum() / is_lbld.sum()
-    return correct_label_ration
-
-
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
     print(cfg)
 
-    running_device = 'server'
+    running_device = 'local'
 
-    experiment_params = {
-        'dataset_name': cfg['dataset'],
-        'instance_query_strategy': cfg['instance_query_strategy'],
-        'annotator_query_strategy': cfg['annotator_query_strategy'],
-        'batch_size': cfg['batch_size'],
-        'n_annotators_per_sample': cfg['n_annotator_per_instance'],
-        'n_cycles': cfg['n_cycles'],
-        'seed': cfg['seed'],
-    }
-    master_random_state = np.random.RandomState(experiment_params['seed'])
-
-    # experiment_params = {
-    #     'dataset_name': 'letter',
-    #     'instance_query_strategy': 'random',
-    #     'annotator_query_strategy': 'round-robin',
-    #     'batch_size': 256,
-    #     'n_annotators_per_sample': 1,
-    #     'n_cycles': 25,
-    #     'seed': 0,
-    # }
-    # master_random_state = np.random.RandomState(experiment_params['seed'])
+    if running_device == "server":
+        experiment_params = {
+            'dataset_name': cfg['dataset'],
+            'instance_query_strategy': cfg['instance_query_strategy'],
+            'annotator_query_strategy': cfg['annotator_query_strategy'],
+            'batch_size': cfg['batch_size'],
+            'n_annotators_per_sample': cfg['n_annotator_per_instance'],
+            'n_cycles': cfg['n_cycles'],
+            'seed': cfg['seed'],
+        }
+        master_random_state = np.random.RandomState(experiment_params['seed'])
+    else:
+        experiment_params = {
+            'dataset_name': 'letter',
+            'instance_query_strategy': 'random',
+            'annotator_query_strategy': 'round-robin',
+            'batch_size': 256,
+            'n_annotators_per_sample': 1,
+            'n_cycles': 2,
+            'seed': 0,
+        }
+        master_random_state = np.random.RandomState(experiment_params['seed'])
 
     metric_dict = {
         'step': [],
@@ -93,6 +86,11 @@ def main(cfg):
     n_annotators = y_train.shape[1]
     n_samples = X_train.shape[0]
 
+    # add more metric
+    for i in range(n_annotators):
+        metric_dict[f"Number_of_annotations_{i}"] = []
+        metric_dict[f"Number_of_correct_annotation_{i}"] = []
+
     # Generate model according to config
     hyper_parameter = cfg['hyper_parameter']
     lr_scheduler = LRScheduler(policy='CosineAnnealingLR', T_max=hyper_parameter['max_epochs'])
@@ -101,24 +99,17 @@ def main(cfg):
     y_partial = np.full_like(y_train, fill_value=MISSING_LABEL)
     initial_label_size = 128
 
-    # for a_idx in range(n_annotators):
-    #     random_state = np.random.RandomState(a_idx)
-    #     is_lbld_a = is_labeled(y_train[:, a_idx], missing_label=MISSING_LABEL)
-    #     p_a = is_lbld_a / is_lbld_a.sum()
-    #     initial_label_size = min(initial_label_size, is_lbld_a.sum())
-    #     selected_idx_a = random_state.choice(np.arange(n_samples), size=initial_label_size, p=p_a, replace=False)
-    #     y_partial[selected_idx_a, a_idx] = y_train[selected_idx_a, a_idx]
-    #
-    # correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
-    # metric_dict['erorr_annotation_rate'].append(1 - correct_label_ratio)
+    for a_idx in range(n_annotators):
+        random_state = np.random.RandomState(a_idx)
+        is_lbld_a = is_labeled(y_train[:, a_idx], missing_label=MISSING_LABEL)
+        p_a = is_lbld_a / is_lbld_a.sum()
+        initial_label_size = min(initial_label_size, is_lbld_a.sum())
+        selected_idx_a = random_state.choice(np.arange(n_samples), size=initial_label_size, p=p_a, replace=False)
+        y_partial[selected_idx_a, a_idx] = y_train[selected_idx_a, a_idx]
 
     # Create query strategy
     sa_qs = create_instance_query_strategy(experiment_params['instance_query_strategy'], random_state=gen_random_state(master_random_state), missing_label=MISSING_LABEL)
     ma_qs = SingleAnnotatorWrapper(sa_qs, random_state=gen_random_state(master_random_state), missing_label=MISSING_LABEL)
-    sa_init = create_instance_query_strategy('random', random_state=gen_random_state(master_random_state),
-                                             missing_label=MISSING_LABEL)
-    ma_init = SingleAnnotatorWrapper(sa_init, random_state=gen_random_state(master_random_state),
-                                   missing_label=MISSING_LABEL)
 
     candidate_indices = np.arange(n_samples)
 
@@ -142,28 +133,16 @@ def main(cfg):
                 A_perf = A
             elif experiment_params['annotator_query_strategy'] == 'round-robin':
                 A_perf = copy.deepcopy(A)
-                res_anno = (c * experiment_params['n_annotators_per_sample']) % n_annotators
+                res_anno = ((c-1) * experiment_params['n_annotators_per_sample']) % n_annotators
                 A_perf[:, res_anno: res_anno + experiment_params['n_annotators_per_sample']] = 1
 
-            if c == 0:
-                query_indices = call_func(
-                    ma_init.query,
-                    X=X_train,
-                    y=y_partial,
-                    A_perf=A_perf,
-                    batch_size=experiment_params['batch_size'],
-                    n_annotators_per_sample=experiment_params['n_annotators_per_sample'],
-                )
-                y_partial[idx(query_indices)] = y_train[idx(query_indices)]
-                correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
-                metric_dict['error_annotation_rate'].append(correct_label_ratio)
-            else:
+            if c > 0:
                 is_ulbld_query = np.copy(is_ulbld)
                 is_candidate = is_ulbld_query.all(axis=-1)
                 candidates = candidate_indices[is_candidate]
                 query_params_dict = {}
                 if experiment_params['instance_query_strategy'] == "uncertainty":
-                    query_params_dict = {"clf": net, "fit_clf": False}
+                    query_params_dict["query_params_dict"] = {"clf": net, "fit_clf": False}
                 query_indices = call_func(
                     ma_qs.query,
                     X=X_train,
@@ -172,11 +151,15 @@ def main(cfg):
                     A_perf=A_perf[candidates],
                     batch_size=experiment_params['batch_size'],
                     n_annotators_per_sample=experiment_params['n_annotators_per_sample'],
-                    query_params_dict=query_params_dict,
+                    **query_params_dict
                 )
                 y_partial[idx(query_indices)] = y_train[idx(query_indices)]
-                correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
-                metric_dict['error_annotation_rate'].append(correct_label_ratio)
+
+            number_annotation_annotator, number_correct_label_annotator, correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
+            metric_dict['error_annotation_rate'].append(1 - correct_label_ratio)
+            for i in range(n_annotators):
+                metric_dict[f"Number_of_annotations_{i}"].append(number_annotation_annotator[i])
+                metric_dict[f"Number_of_correct_annotation_{i}"].append(number_correct_label_annotator[i])
 
             net = SkorchClassifier(
                 TabularClassifierModule,
@@ -208,10 +191,10 @@ def main(cfg):
 
             print(c, accuracy)
             is_ulbld = is_unlabeled(y_partial, missing_label=MISSING_LABEL)
-        
+
+        print(metric_dict)
         df = pd.DataFrame.from_dict(data=metric_dict)
         outpath = active_run.info.artifact_uri
-        print(active_run.info.artifact_uri)
         outpath = os.path.join(outpath, 'result.csv')
         df.to_csv(outpath, index=False)
         return

@@ -9,8 +9,10 @@ from sklearn.datasets import fetch_openml
 
 import torch
 
+from skactiveml.utils import is_labeled
 
-def load_dataset(name, data_dir,random_state=42):
+
+def load_dataset(name, data_dir, random_state=42):
     if name == 'letter':
         return load_dataset_letter(data_dir)
 
@@ -26,6 +28,7 @@ def load_dataset_letter(data_dir, random_state=42):
     X_train = sc.transform(X_train)
     X_test = sc.transform(X_test)
     return X_train, X_test, y_train, y_test, y_train_true, y_test_true
+
 
 def load_dataset_letter_2(data_dir, random_state=42):
     X, y_true = fetch_openml(data_id=6, cache=True, return_X_y=True)
@@ -46,3 +49,13 @@ def load_dataset_letter_2(data_dir, random_state=42):
     X_train = sc.transform(X_train)
     X_test = sc.transform(X_test)
     return X_train, X_test, y_train, y_test, y_train_true, y_test_true
+
+
+def get_correct_label_ratio(y_partial, y_train_true, missing_label):
+    is_lbld = is_labeled(y_partial, missing_label=missing_label)
+    number_annotation_annotator = np.sum(is_lbld, axis=0)
+    y_true = np.array([y_train_true for _ in range(y_partial.shape[1])]).T
+    correct_label = is_lbld * (y_partial == y_true)
+    number_correct_label_annotator = np.sum(correct_label, axis=0)
+    correct_label_ratio = correct_label.sum() / is_lbld.sum()
+    return number_annotation_annotator, number_correct_label_annotator, correct_label_ratio
