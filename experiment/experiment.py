@@ -45,6 +45,7 @@ def main(cfg):
             'dataset_name': cfg['dataset'],
             'instance_query_strategy': cfg['instance_query_strategy'],
             'annotator_query_strategy': cfg['annotator_query_strategy'],
+            'learning_strategy': cfg['learning_strategy'],
             'batch_size': cfg['batch_size'],
             'n_annotators_per_sample': cfg['n_annotator_per_instance'],
             'n_cycles': cfg['n_cycles'],
@@ -54,11 +55,12 @@ def main(cfg):
     else:
         experiment_params = {
             'dataset_name': 'letter_perf',
-            'instance_query_strategy': "uncertainty",
-            'annotator_query_strategy': "geo-reg-w",
+            'instance_query_strategy': "random",
+            'annotator_query_strategy': "random",
+            'learning_strategy': "geo-reg-f",
             'batch_size': 256,
-            'n_annotators_per_sample': 1,
-            'n_cycles': 25,
+            'n_annotators_per_sample': 2,
+            'n_cycles': 5,
             'seed': 0,
         }
         master_random_state = np.random.RandomState(experiment_params['seed'])
@@ -127,22 +129,23 @@ def main(cfg):
         mlflow.log_params(experiment_params)
 
         for c in range(experiment_params['n_cycles'] + 1):
-            if experiment_params['annotator_query_strategy'] == 'random':
-                A_perf = A
-                A_perf = A_perf[candidates]
-            elif experiment_params['annotator_query_strategy'] == 'round-robin':
-                A_perf = copy.deepcopy(A)
-                res_anno = ((c-1) * experiment_params['n_annotators_per_sample']) % n_annotators
-                A_perf[:, res_anno: res_anno + experiment_params['n_annotators_per_sample']] = 1
-                A_perf = A_perf[candidates]
-            elif experiment_params['annotator_query_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
-                A_perf = net.predict_annotator_perf() if c > 0 else A
-                print(A_perf)
-
             if c > 0:
                 is_ulbld_query = np.copy(is_ulbld)
                 is_candidate = is_ulbld_query.all(axis=-1)
                 candidates = candidate_indices[is_candidate]
+
+                if experiment_params['annotator_query_strategy'] == 'random':
+                    A_perf = A
+                    A_perf = A_perf[candidates]
+                elif experiment_params['annotator_query_strategy'] == 'round-robin':
+                    A_perf = copy.deepcopy(A)
+                    res_anno = ((c-1) * experiment_params['n_annotators_per_sample']) % n_annotators
+                    A_perf[:, res_anno: res_anno + experiment_params['n_annotators_per_sample']] = 1
+                    A_perf = A_perf[candidates]
+                elif experiment_params['annotator_query_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
+                    A_perf = net.predict_annotator_perf()
+                    print(A_perf)
+
                 query_params_dict = {}
                 if experiment_params['instance_query_strategy'] == "uncertainty":
                     query_params_dict = {"clf": net, "fit_clf": False}
@@ -164,7 +167,7 @@ def main(cfg):
                 metric_dict[f"Number_of_annotations_{i}"].append(number_annotation_annotator[i])
                 metric_dict[f"Number_of_correct_annotation_{i}"].append(number_correct_label_annotator[i])
 
-            if experiment_params['annotator_query_strategy'] in ["random", "round-robin"]:
+            if experiment_params['learning_strategy'] == "majority-vote":
                 net = SkorchClassifier(
                     TabularClassifierModule,
                     module__n_classes=n_classes,
@@ -187,7 +190,7 @@ def main(cfg):
                                       random_state=experiment_params['seed'] + c)
 
                 net.fit(X_train, y_agg)
-            elif experiment_params['annotator_query_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
+            elif experiment_params['learning_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
                 gt_net = TabularClassifierGetEmbedXModule(n_features=n_features, dropout=0.5)
                 output_net = TabularClassifierGetOutputModule(n_classes=n_classes)
                 net = RegCrowdNetClassifier(
@@ -205,7 +208,7 @@ def main(cfg):
                     device=device,
                     callbacks=[lr_scheduler],
                     lmbda="auto",
-                    regularization=experiment_params['annotator_query_strategy'],
+                    regularization=experiment_params['learning_strategy'],
                     iterator_train__drop_last=True,
                     **hyper_parameter,
                 )

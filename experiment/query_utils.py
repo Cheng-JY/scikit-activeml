@@ -24,5 +24,8 @@ def get_annotator_performance(name, shape):
     A_perf_dic = {
         'random': np.ones(shape=shape),
         'round-robin': np.zeros(shape=shape),
+        'trace-reg': np.ones(shape=shape[1]),
+        'geo-reg-f': np.ones(shape=shape[1]),
+        'geo-reg-w': np.ones(shape=shape[1]),
     }
     return A_perf_dic.get(name, np.ones(shape=shape))
