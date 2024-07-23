@@ -16,13 +16,13 @@ class RegCrowdNetClassifier(SkorchClassifier, AnnotatorModelMixin):
     """
 
     def __init__(
-        self,
-        n_classes,
-        n_annotators,
-        *args,
-        lmbda="auto",
-        regularization="trace-reg",
-        **kwargs,
+            self,
+            n_classes,
+            n_annotators,
+            *args,
+            lmbda="auto",
+            regularization="trace-reg",
+            **kwargs,
     ):
         super(RegCrowdNetClassifier, self).__init__(
             module=RegCrowdNetModule,
@@ -142,6 +142,7 @@ class RegCrowdNetClassifier(SkorchClassifier, AnnotatorModelMixin):
 class RegCrowdNetModule(nn.Module):
     """RegCrowdNetModule
     """
+
     def __init__(self, gt_embed_x, gt_output, n_classes, n_annotators, regularization):
         super().__init__()
         self.gt_embed_x = gt_embed_x
