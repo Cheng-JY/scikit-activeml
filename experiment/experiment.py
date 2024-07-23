@@ -53,9 +53,9 @@ def main(cfg):
         master_random_state = np.random.RandomState(experiment_params['seed'])
     else:
         experiment_params = {
-            'dataset_name': 'letter_pref',
+            'dataset_name': 'letter_perf',
             'instance_query_strategy': "uncertainty",
-            'annotator_query_strategy': "trace-reg",
+            'annotator_query_strategy': "geo-reg-w",
             'batch_size': 256,
             'n_annotators_per_sample': 1,
             'n_cycles': 25,
@@ -137,6 +137,7 @@ def main(cfg):
                 A_perf = A_perf[candidates]
             elif experiment_params['annotator_query_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
                 A_perf = net.predict_annotator_perf() if c > 0 else A
+                print(A_perf)
 
             if c > 0:
                 is_ulbld_query = np.copy(is_ulbld)
