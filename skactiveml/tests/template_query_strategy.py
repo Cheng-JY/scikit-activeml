@@ -1,5 +1,4 @@
 import inspect
-import unittest
 import warnings
 from copy import deepcopy
 
@@ -58,11 +57,11 @@ class TemplateQueryStrategy:
             and self.query_default_params_reg is None
         ):
             raise ValueError(
-                f"The query strategies must support either "
-                f"classification or regression. Hence, at least "
-                f"one parameter of `query_default_params_clf` "
-                f"and `query_default_params_reg` must be not None. "
-                f"Use emtpy dictionary to use default values."
+                "The query strategies must support either "
+                "classification or regression. Hence, at least "
+                "one parameter of `query_default_params_clf` "
+                "and `query_default_params_reg` must be not None. "
+                "Use emtpy dictionary to use default values."
             )
         if self.query_default_params_clf is not None:
             check_positional_args(
@@ -248,7 +247,13 @@ class TemplateQueryStrategy:
                         if err is None:
                             qs.query(**query_params)
                         else:
-                            self.assertRaises(err, qs.query, **query_params)
+                            if not hasattr(qs, "query"):
+                                if not issubclass(AttributeError, err):
+                                    qs.query
+                            else:
+                                self.assertRaises(
+                                    err, qs.query, **query_params
+                                )
 
 
 class TemplatePoolQueryStrategy(TemplateQueryStrategy):
@@ -322,13 +327,23 @@ class TemplatePoolQueryStrategy(TemplateQueryStrategy):
                 replace_init_params = {"missing_label": ml}
                 if "classes" in self.init_default_params:
                     replace_init_params["classes"] = classes
+                if "query_strategy" in self.init_default_params:
+                    query_strategy = clone(
+                        self.init_default_params["query_strategy"]
+                    )
+                    query_strategy.missing_label = ml
+                    replace_init_params["query_strategy"] = query_strategy
+                replace_query_params = {}
                 if "clf" in self.query_default_params_clf:
                     clf = clone(self.query_default_params_clf["clf"])
                     clf.missing_label = ml
                     clf.classes = classes
-                    replace_query_params = {"clf": clf}
-                else:
-                    replace_query_params = None
+                    replace_query_params["clf"] = clf
+                if "ensemble" in self.query_default_params_clf:
+                    ensemble = clone(self.query_default_params_clf["ensemble"])
+                    ensemble.missing_label = ml
+                    ensemble.classes = classes
+                    replace_query_params["ensemble"] = ensemble
                 replace_y = np.full_like(y, ml, dtype=t)
                 replace_y[0] = classes[0]
                 replace_y[1] = classes[1]
@@ -559,12 +574,12 @@ class TemplateSingleAnnotatorPoolQueryStrategy(TemplatePoolQueryStrategy):
                 self.assertEqual(sum(np.isnan(utils[0])), n_labeled)
 
                 query_params["batch_size"] = max_batch_size + 1
-                query_params["return_utilities"] = False
+                query_params["return_utilities"] = True
                 self.assertWarns(Warning, qs.query, **query_params)
 
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore")
-                    ids = qs.query(**query_params)
+                    ids, utilities = qs.query(**query_params)
                     self.assertEqual(len(ids), max_batch_size)
 
     def test_query_candidate_variation(self):

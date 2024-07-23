@@ -1,5 +1,6 @@
 """
-Module implementing Batch Active Learning by Diverse Gradient Embedding (BADGE)
+Module implementing the pool-based query strategy Batch Active Learning by
+Diverse Gradient Embedding (BADGE).
 """
 
 import numpy as np
@@ -28,14 +29,18 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
     ----------
     missing_label : scalar or string or np.nan or None, default=np.nan
         Value to represent a missing label.
-    random_state : int or np.random.RandomState
+    random_state : None or int or np.random.RandomState, default=None
         The random state to use.
+    clf_embedding_flag_name : str or None, default=None
+        Name of the flag, which is passed to the `predict_proba` method for
+        getting the (learned) sample representations. If
+        `clf_embedding_flag_name=None`, the input samples `X` are used.
 
     References
     ----------
-     [1] J. Ash, Jordan T., Chicheng Zhang, Akshay Krishnamurthy,
-         John Langford, and Alekh Agarwal, "Deep Batch Active Learning
-         by Diverse, Uncertain Gradient Lower Bounds." ICLR, 2019.
+    [1] J. Ash, Jordan T., Chicheng Zhang, Akshay Krishnamurthy,
+    John Langford, and Alekh Agarwal, "Deep Batch Active Learning by Diverse,
+    Uncertain Gradient Lower Bounds." ICLR, 2019.
     """
 
     def __init__(
@@ -55,6 +60,7 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
         y,
         clf,
         fit_clf=True,
+        sample_weight=None,
         candidates=None,
         batch_size=1,
         return_utilities=False,
@@ -67,10 +73,15 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
             Training data set, usually complete, i.e. including the labeled and
             unlabeled samples.
         y : array-like of shape (n_samples, )
-            Labels of the training data set (possibly including unlabeled samples,
-            indicated by self.missing_label).
+            Labels of the training data set (possibly including unlabeled
+            samples, indicated by self.missing_label).
         clf : skactiveml.base.SkactivemlClassifier
             Model implementing the methods `fit` and `predict_proba`.
+        fit_clf : bool, optional (default=True)
+            Defines whether the classifier should be fitted on `X`, `y`, and
+            `sample_weight`.
+        sample_weight: array-like of shape (n_samples), optional (default=None)
+            Weights of training samples in `X`.
         candidates : None or array-like of shape (n_candidates), dtype=int or
             array-like of shape (n_candidates, n_features),
             optional (default=None)
@@ -85,12 +96,6 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
             The number of samples to be selected in one AL cycle.
         return_utilities : bool, optional (default=False)
             If true, also return the utilities based on the query strategy.
-        clf_embedding_flag_name : string, optional (default=None)
-            The name of the parameter, whether to return the embedding or not,
-            according to the used classifier.
-            By default, `None` means no embeddings will be returned, but we use
-            the original `X` as embedding.
-
 
         Returns
         -------
@@ -108,8 +113,8 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
             e.g., `utilities[0]` indicates the utilities used for selecting
             the first sample (with index `query_indices[0]`) of the batch.
             Utilities for labeled samples will be set to np.nan.
-            For the case where the samples are uniformly randomly selected from the set,
-            the sum of all utility of samples will be 1.
+            For the case where the samples are uniformly randomly selected from
+            the set, the sum of all utility of samples will be 1.
             The utilities represent here the probabilities of samples being
             chosen.
             If candidates is None or of shape (n_candidates), the indexing
@@ -135,7 +140,10 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
 
         # Fit the classifier
         if fit_clf:
-            clf = clone(clf).fit(X, y)
+            if sample_weight is None:
+                clf = clone(clf).fit(X, y)
+            else:
+                clf = clone(clf).fit(X, y, sample_weight)
 
         # find the unlabeled dataset
         if candidates is None:
@@ -179,10 +187,11 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
         # sampling with kmeans++
         query_indicies = []
         query_indicies_in_unlbld = []
+        idx_in_unlbld = []
         d_2_s = []
         for i in range(batch_size):
             if i == 0:
-                d_2 = _d_2(g_x, [])
+                d_2 = _d_2(g_x, idx_in_unlbld)
             else:
                 d_2 = _d_2(g_x, [idx_in_unlbld], d_2_s[i - 1])
             d_2_s.append(d_2)
@@ -217,17 +226,17 @@ class Badge(SingleAnnotatorPoolQueryStrategy):
             return query_indicies
 
 
-def _d_2(g_x, query_indicies, d_latest=None):
+def _d_2(g_x, query_indices, d_latest=None):
     """
     Calculates the D^2 value of the embedding features of unlabeled data.
 
     Parameters
     ----------
-    g_x : numpy.ndarray of shape (n_unlabeled_samples, n_features)
+    g_x : np.ndarray of shape (n_unlabeled_samples, n_features)
         The results after gradient embedding
-    query_indicies : numpy.ndarray of shape (n_query_indicies)
+    query_indices : numpy.ndarray of shape (n_query_indices)
         the query indications that correspond to the unlabeled samples.
-    d_latest : numpy.ndarray of shape (n_unlabeled_samples) default=None
+    d_latest : np.ndarray of shape (n_unlabeled_samples) default=None
         The distance between each data point and its nearest centre.
         This is used to simplify the calculation of the later distances for the
         next selected sample.
@@ -237,10 +246,10 @@ def _d_2(g_x, query_indicies, d_latest=None):
     D2 : numpy.ndarray of shape (n_unlabeled_samples)
         The D^2 value, for the first sample, is the value inf.
     """
-    if len(query_indicies) == 0:
+    if len(query_indices) == 0:
         return np.sum(g_x**2, axis=-1)
-    g_query_indicies = g_x[query_indicies]
-    _, D = pairwise_distances_argmin_min(X=g_x, Y=g_query_indicies)
+    query_indices = g_x[query_indices]
+    _, D = pairwise_distances_argmin_min(X=g_x, Y=query_indices)
     if d_latest is not None:
         D2 = np.minimum(d_latest, np.square(D))
     return D2

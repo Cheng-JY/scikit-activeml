@@ -26,6 +26,7 @@ from ._query_by_committee import (
 )
 from ._quire import Quire
 from ._random_sampling import RandomSampling
+from ._regression_tree_based_al import RegressionTreeBasedAL
 from ._uncertainty_sampling import (
     UncertaintySampling,
     uncertainty_scores,
@@ -34,6 +35,7 @@ from ._uncertainty_sampling import (
 from ._core_set import CoreSet, k_greedy_center
 from ._typi_clust import TypiClust
 from ._badge import Badge
+from ._wrapper import SubSamplingWrapper, ParallelUtilityEstimationWrapper
 
 __all__ = [
     "multiannotator",
@@ -67,4 +69,7 @@ __all__ = [
     "TypiClust",
     "Badge",
     "GreedyBALD",
+    "RegressionTreeBasedAL",
+    "SubSamplingWrapper",
+    "ParallelUtilityEstimationWrapper",
 ]
