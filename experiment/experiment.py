@@ -55,11 +55,11 @@ def main(cfg):
     else:
         experiment_params = {
             'dataset_name': 'letter',
-            'instance_query_strategy': 'random',
+            'instance_query_strategy': "uncertainty",
             'annotator_query_strategy': 'round-robin',
             'batch_size': 256,
             'n_annotators_per_sample': 1,
-            'n_cycles': 2,
+            'n_cycles': 25,
             'seed': 0,
         }
         master_random_state = np.random.RandomState(experiment_params['seed'])
@@ -142,7 +142,7 @@ def main(cfg):
                 candidates = candidate_indices[is_candidate]
                 query_params_dict = {}
                 if experiment_params['instance_query_strategy'] == "uncertainty":
-                    query_params_dict["query_params_dict"] = {"clf": net, "fit_clf": False}
+                    query_params_dict = {"clf": net, "fit_clf": False}
                 query_indices = call_func(
                     ma_qs.query,
                     X=X_train,
@@ -151,8 +151,9 @@ def main(cfg):
                     A_perf=A_perf[candidates],
                     batch_size=experiment_params['batch_size'],
                     n_annotators_per_sample=experiment_params['n_annotators_per_sample'],
-                    **query_params_dict
+                    **query_params_dict,
                 )
+                print("hi here")
                 y_partial[idx(query_indices)] = y_train[idx(query_indices)]
 
             number_annotation_annotator, number_correct_label_annotator, correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
