@@ -37,7 +37,6 @@ def seed_everything(seed=42):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    print(cfg)
 
     running_device = 'local'
 
@@ -64,12 +63,6 @@ def main(cfg):
         }
         master_random_state = np.random.RandomState(experiment_params['seed'])
 
-    metric_dict = {
-        'step': [],
-        'misclassification': [],
-        'error_annotation_rate': [],
-    }
-
     MISSING_LABEL = -1
 
     seed_everything(experiment_params['seed'])
@@ -86,16 +79,21 @@ def main(cfg):
     n_annotators = y_train.shape[1]
     n_samples = X_train.shape[0]
 
-    # add more metric
+    # add metric dictionary
+    metric_dict = {
+        'step': [],
+        'misclassification': [],
+        'error_annotation_rate': [],
+    }
     for i in range(n_annotators):
         metric_dict[f"Number_of_annotations_{i}"] = []
         metric_dict[f"Number_of_correct_annotation_{i}"] = []
 
-    # Generate model according to config
+    # Get the hyperparameter for model training latter
     hyper_parameter = cfg['hyper_parameter']
     lr_scheduler = LRScheduler(policy='CosineAnnealingLR', T_max=hyper_parameter['max_epochs'])
 
-    # randomly add missing labels
+    # randomly pick annotation initially
     y_partial = np.full_like(y_train, fill_value=MISSING_LABEL)
     initial_label_size = 128
 
@@ -135,6 +133,8 @@ def main(cfg):
                 A_perf = copy.deepcopy(A)
                 res_anno = ((c-1) * experiment_params['n_annotators_per_sample']) % n_annotators
                 A_perf[:, res_anno: res_anno + experiment_params['n_annotators_per_sample']] = 1
+            elif experiment_params['annotator_query_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
+                A_perf = clf.pr
 
             if c > 0:
                 is_ulbld_query = np.copy(is_ulbld)

@@ -51,6 +51,22 @@ def load_dataset_letter_2(data_dir, random_state=42):
     return X_train, X_test, y_train, y_test, y_train_true, y_test_true
 
 
+def load_dataset_letter_pref(data_dir, random_state=42):
+
+    X = np.load(f'{data_dir}/letter/letter-X.npy').astype(np.float32)
+    y_true = np.load(f'{data_dir}/letter/letter-y-true.npy')
+    y = np.tile(y_true, 4)
+    zero_array = np.zeros_like(y_true)
+    y = np.concatenate((y, zero_array))
+
+    X_train, X_test, y_train, y_test, y_train_true, y_test_true = train_test_split(X, y, y_true, test_size=0.2,
+                                                                                   random_state=random_state)
+    sc = StandardScaler().fit(X_train)
+    X_train = sc.transform(X_train)
+    X_test = sc.transform(X_test)
+    return X_train, X_test, y_train, y_test, y_train_true, y_test_true
+
+
 def get_correct_label_ratio(y_partial, y_train_true, missing_label):
     is_lbld = is_labeled(y_partial, missing_label=missing_label)
     number_annotation_annotator = np.sum(is_lbld, axis=0)

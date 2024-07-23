@@ -25,4 +25,4 @@ def get_annotator_performance(name, shape):
         'random': np.ones(shape=shape),
         'round-robin': np.zeros(shape=shape),
     }
-    return A_perf_dic[name]
+    return A_perf_dic.get(name, np.ones(shape=shape))
