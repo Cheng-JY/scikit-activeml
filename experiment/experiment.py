@@ -3,8 +3,8 @@ import os
 import sys
 import warnings
 
-# sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
-sys.path.append("/Users/chengjiaying/PycharmProjects/scikit-activeml")
+sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
+# sys.path.append("/Users/chengjiaying/PycharmProjects/scikit-activeml")
 warnings.filterwarnings("ignore")
 
 import matplotlib.pyplot as plt
@@ -38,7 +38,7 @@ def seed_everything(seed=42):
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
 
-    running_device = 'local'
+    running_device = 'server'
 
     if running_device == "server":
         experiment_params = {
@@ -221,7 +221,6 @@ def main(cfg):
             print(c, accuracy)
             is_ulbld = is_unlabeled(y_partial, missing_label=MISSING_LABEL)
 
-        print(metric_dict)
         df = pd.DataFrame.from_dict(data=metric_dict)
         outpath = active_run.info.artifact_uri
         outpath = os.path.join(outpath, 'result.csv')

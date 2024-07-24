@@ -42,8 +42,8 @@ def main(cfg):
     df = mlflow.search_runs(experiment_ids=exp.experiment_id, output_format="pandas")
 
     df = df[['params.dataset_name', 'params.instance_query_strategy', 'params.annotator_query_strategy',
-             'params.batch_size', 'params.n_annotators_per_sample', 'params.n_cycles', 'params.seed',
-             'artifact_uri']]
+             'params.learning_strategy', 'params.batch_size', 'params.n_annotators_per_sample', 
+             'params.n_cycles', 'params.seed', 'artifact_uri']]
 
     df = df.loc[df['params.dataset_name'] == experiment_params['dataset_name']]
 
