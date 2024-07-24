@@ -55,7 +55,7 @@ def main(cfg):
     else:
         experiment_params = {
             'dataset_name': 'letter_perf',
-            'instance_query_strategy': "random",
+            'instance_query_strategy': "coreset",
             'annotator_query_strategy': "random",
             'learning_strategy': "geo-reg-f",
             'batch_size': 256,
