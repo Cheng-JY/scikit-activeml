@@ -70,7 +70,7 @@ def main(cfg):
                                  f'+ {aqs_name} '
                                  f'+ {ls_name}'
                                  f'+ {n_per_sample}')
-                        output_path = f'{cfg["output_file_path"][running_device]}/{label}.csv'
+                        output_path = f'{cfg["output_file_path"][running_device]}/result/{label}.csv'
                         r_mean_and_std.to_csv(output_path, index=False)
 
 
