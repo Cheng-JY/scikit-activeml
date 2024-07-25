@@ -1,10 +1,5 @@
 import os
 import sys
-import warnings
-
-sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
-warnings.filterwarnings("ignore")
-
 import hydra
 import mlflow
 import matplotlib as mlp
@@ -13,24 +8,20 @@ import warnings
 import numpy as np
 
 import pandas as pd
-import argparse
 
-mlp.rcParams["figure.facecolor"] = "white"
+sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
 warnings.filterwarnings("ignore")
 
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    print(cfg)
 
     running_device = 'local'
 
     if running_device == 'server':
         dataset_name = cfg['dataset'],
-        graph_type = cfg['graph_type']
     else:
         dataset_name = 'letter_perf'
-        graph_type = 'misclassification'
 
     ml_flow_tracking = cfg['ml_flow_tracking']
     mlflow.set_tracking_uri(uri=ml_flow_tracking[f"tracking_file_path_{running_device}"])
@@ -39,9 +30,8 @@ def main(cfg):
     df = mlflow.search_runs(experiment_ids=exp.experiment_id, output_format="pandas")
 
     df = df[['params.dataset_name', 'params.instance_query_strategy', 'params.annotator_query_strategy',
-             'params.learning_strategy', 'params.batch_size', 'params.n_annotators_per_sample', 
+             'params.learning_strategy', 'params.batch_size', 'params.n_annotators_per_sample',
              'params.n_cycles', 'params.seed', 'artifact_uri']]
-    batch_size = 256
 
     df = df.loc[df['params.dataset_name'] == dataset_name]
 
@@ -71,24 +61,17 @@ def main(cfg):
 
                     if len(r) != 0:
                         results = pd.concat(r)
-                        result = results.groupby(['step'])[graph_type].agg(['mean', 'std']).set_axis(['mean', 'std'], axis=1)
-                        result_mean = result['mean'].to_numpy()
-                        result_std = result['std'].to_numpy()
+                        mean_and_std = []
+                        for column in results.columns:
+                            result = results.groupby(['step'])[column].agg(['mean', 'std']).set_axis([f'{column}_mean', f'{column}_std'], axis=1)
+                            mean_and_std.append(result)
+                        r_mean_and_std = pd.concat(mean_and_std, axis=1)
                         label = (f'{iqs_name} '
                                  f'+ {aqs_name} '
                                  f'+ {ls_name}'
                                  f'+ {n_per_sample}')
-                        plt.errorbar(np.arange(batch_size, (len(result_mean) + 1) * batch_size, batch_size), result_mean, result_std,
-                                     label=f"({np.mean(result_mean):.4f}) {label}", alpha=0.3)
-
-    plt.legend(bbox_to_anchor=(0.5, -0.75), loc='lower center', ncol=2)
-    plt.tight_layout()
-    plt.xlabel('# Labels queried')
-    plt.ylabel(f"{graph_type}")
-    title = f'{dataset_name}_{graph_type}'
-    plt.title(title)
-    output_path = f'{cfg["output_file_path"][running_device]}/{title}.pdf'
-    plt.savefig(output_path, bbox_inches="tight")
+                        output_path = f'{cfg["output_file_path"][running_device]}/{label}.csv'
+                        r_mean_and_std.to_csv(output_path, index=False)
 
 
 if __name__ == "__main__":

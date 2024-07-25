@@ -7,13 +7,13 @@ def main(cfg):
     output_dir = cfg["output_file_path"]["local"]
     bash_list = []
     instance_query_strategies = ['random', 'uncertainty', 'coreset']
-    annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-ref-f', 'geo-ref-w']
-    learning_strategies = ['majority-vote', 'trace-reg', 'geo-ref-f', 'geo-ref-w']
+    annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
+    learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     n_annototar_per_instance_list = [1, 2]
     dataset = 'letter'
     batch_size = 256
     n_cycles = 25
-    seed_list = [0, 1, 2, 3, 4]
+    seed_list = [0,1,2]
 
     file_path = "srun python /mnt/stud/home/jcheng/scikit-activeml/experiment/experiment.py"
 
@@ -22,7 +22,7 @@ def main(cfg):
             for learning_strategy in learning_strategies:
                 for n_annototar_per_instance in n_annototar_per_instance_list:
                     for seed in seed_list:
-                        if (annotator_query_strategy in ['trace-reg', 'geo-ref-f', 'geo-ref-w'] and
+                        if (annotator_query_strategy in ['trace-reg', 'geo-reg-f', 'geo-reg-w'] and
                                 learning_strategy != annotator_query_strategy):
                             continue
                         _bash = (f"{file_path} "
