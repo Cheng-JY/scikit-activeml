@@ -23,10 +23,10 @@ warnings.filterwarnings("ignore")
 def main(cfg):
     print(cfg)
 
-    running_device = 'local'
+    running_device = 'server'
 
     if running_device == 'server':
-        dataset_name = cfg['dataset'],
+        dataset_name = cfg['dataset']
         graph_type = cfg['graph_type']
     else:
         dataset_name = 'letter_perf'

@@ -16,10 +16,10 @@ warnings.filterwarnings("ignore")
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
 
-    running_device = 'local'
+    running_device = 'server'
 
     if running_device == 'server':
-        dataset_name = cfg['dataset'],
+        dataset_name = cfg['dataset']
     else:
         dataset_name = 'letter_perf'
 
