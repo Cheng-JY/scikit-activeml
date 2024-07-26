@@ -4,14 +4,19 @@ import pandas as pd
 import ipywidgets as widgets
 from IPython.core.display_functions import display
 
+metrics = ['misclassification', 'error_annotation_rate']
+for i in range(10):
+    metrics.append(f"Number_of_annotations_{i}")
+    metrics.append(f"Number_of_correct_annotation_{i}")
+
 
 def plot_graph(
         is_random=True,
         is_uncertainty=False,
         is_core_set=False,
-        is_n_anno_1=True,
-        is_n_anno_2=False,
-        metric='error_annotation_rate',
+        is_n_anno_1=False,
+        is_n_anno_2=True,
+        metric='Number_of_annotations_1',
 ):
     output_path = '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/output_image/'
 
@@ -57,23 +62,17 @@ def plot_graph(
     plt.ylabel(f"{metric}")
     title = f'letter_{metric}'
     plt.title(title)
-    plt.show()
     output_path = f'{output_path}/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
 
-
-metrics = ['misclassification', 'error_annotation_rate']
-for i in range(10):
-    metrics.append(f"Number_of_annotations_{i}")
-    metrics.append(f"Number_of_correct_annotation_{i}")
 
 widgets.interact(
     plot_graph,
     is_random=True,
     is_uncertainty=False,
     is_core_set=False,
-    is_n_anno_1=True,
-    is_n_anno_2=False,
+    is_n_anno_1=False,
+    is_n_anno_2=True,
     metric=metrics,
     )
 

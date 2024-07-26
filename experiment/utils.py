@@ -57,8 +57,8 @@ def load_dataset_letter_perf(data_dir, random_state=42):
 
     X = np.load(f'{data_dir}/letter/letter-X.npy').astype(np.float32)
     y_true = np.load(f'{data_dir}/letter/letter-y-true.npy')
-    zero_array = np.zeros_like(y_true)
-    y = np.array([y_true, y_true, zero_array], dtype=float).T
+    y_3 = np.random.choice(np.unique(y_true), size=len(y_true), replace=True)
+    y = np.array([y_true, y_true, y_3], dtype=float).T
 
     X_train, X_test, y_train, y_test, y_train_true, y_test_true = train_test_split(X, y, y_true, test_size=0.2,
                                                                                    random_state=random_state)

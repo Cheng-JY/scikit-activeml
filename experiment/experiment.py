@@ -38,7 +38,7 @@ def seed_everything(seed=42):
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
 
-    running_device = 'server'
+    running_device = 'local'
 
     if running_device == "server":
         experiment_params = {
@@ -54,9 +54,9 @@ def main(cfg):
         master_random_state = np.random.RandomState(experiment_params['seed'])
     else:
         experiment_params = {
-            'dataset_name': 'letter_perf',
+            'dataset_name': 'letter',
             'instance_query_strategy': "coreset",
-            'annotator_query_strategy': "random",
+            'annotator_query_strategy': "geo-reg-f",
             'learning_strategy': "geo-reg-f",
             'batch_size': 256,
             'n_annotators_per_sample': 2,
