@@ -81,7 +81,7 @@ def main(cfg):
                         plt.errorbar(np.arange(batch_size, (len(result_mean) + 1) * batch_size, batch_size), result_mean, result_std,
                                      label=f"({np.mean(result_mean):.4f}) {label}", alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(0.5, -0.75), loc='lower center', ncol=2)
+    plt.legend(bbox_to_anchor=(1.05, 1), fontsize=6, loc='upper right', ncol=2)
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     plt.ylabel(f"{graph_type}")
