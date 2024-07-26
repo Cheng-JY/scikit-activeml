@@ -46,9 +46,11 @@ def main(cfg):
     df = df.loc[df['params.dataset_name'] == dataset_name]
 
     instance_query_strategies = df['params.instance_query_strategy'].unique()
+    instance_query_strategies = ['random']
     annotator_query_strategies = df['params.annotator_query_strategy'].unique()
     learning_strategies = df['params.learning_strategy'].unique()
     n_annotators_per_sample_list = df['params.n_annotators_per_sample'].unique()
+    n_annotators_per_sample_list = ['1']
 
     for iqs_name in instance_query_strategies:
         for aqs_name in annotator_query_strategies:
@@ -85,7 +87,7 @@ def main(cfg):
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     plt.ylabel(f"{graph_type}")
-    title = f'{dataset_name}_{graph_type}'
+    title = f'{dataset_name}_{graph_type}_random_1'
     plt.title(title)
     output_path = f'{cfg["output_file_path"][running_device]}/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
