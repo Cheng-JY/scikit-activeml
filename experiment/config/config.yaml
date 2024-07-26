@@ -5,7 +5,7 @@ hyper_parameter:
   optimizer__weight_decay: 0.0
 
 ml_flow_tracking:
-  experiment_name: 'Experiment_Nr_6'
+  experiment_name: 'Experiment_Nr_7'
   tracking_file_path_local: '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/tracking'
   tracking_file_path_server: '/mnt/stud/home/jcheng/scikit-activeml/experiment/tracking'
 
