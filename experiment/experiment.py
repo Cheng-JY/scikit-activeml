@@ -25,7 +25,8 @@ from skorch.callbacks import LRScheduler
 import torch
 from torch import nn
 
-from classifier.classifier import TabularClassifierModule, TabularClassifierGetEmbedXModule, TabularClassifierGetOutputModule
+from classifier.classifier import TabularClassifierModule, TabularClassifierGetEmbedXModule, \
+    TabularClassifierGetOutputModule
 from utils import *
 from query_utils import create_instance_query_strategy, get_annotator_performance, gen_random_state
 
@@ -37,8 +38,20 @@ def seed_everything(seed=42):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-
     running_device = 'local'
+
+    # load dataset
+    data_dir = cfg['dataset_file_path'][running_device]
+    name = cfg['dataset_name'] if running_device == 'server' else 'letter'
+    X_train, X_test, y_train, y_test, y_train_true, y_test_true = (
+        load_dataset(name=name, data_dir=data_dir)
+    )
+
+    classes = np.unique(y_train_true)
+    n_classes = len(classes)
+    n_features = X_train.shape[1]
+    n_annotators = y_train.shape[1]
+    n_samples = X_train.shape[0]
 
     if running_device == "server":
         experiment_params = {
@@ -46,7 +59,7 @@ def main(cfg):
             'instance_query_strategy': cfg['instance_query_strategy'],
             'annotator_query_strategy': cfg['annotator_query_strategy'],
             'learning_strategy': cfg['learning_strategy'],
-            'batch_size': cfg['batch_size'],
+            'batch_size': cfg['batch_size'] * n_classes,
             'n_annotators_per_sample': cfg['n_annotator_per_instance'],
             'n_cycles': cfg['n_cycles'],
             'seed': cfg['seed'],
@@ -55,12 +68,13 @@ def main(cfg):
     else:
         experiment_params = {
             'dataset_name': 'letter',
-            'instance_query_strategy': "coreset",
-            'annotator_query_strategy': "geo-reg-f",
+            'instance_query_strategy': "coreset",  # [random, uncertainty, coreset]
+            'annotator_query_strategy': "geo-reg-f",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
             'learning_strategy': "geo-reg-f",
-            'batch_size': 256,
-            'n_annotators_per_sample': 2,
-            'n_cycles': 5,
+            # [majority_vote, trace-reg, geo-reg-f, geo-reg-w] [r-m, rr-m, r-t, t-t, gf-gf, gw-gw]
+            'batch_size': 12 * n_classes,  # 6*n_classes,
+            'n_annotators_per_sample': 2,  # 1, 2, 3
+            'n_cycles': 25,  # datensatz abhängig ausgelearnt # convergiert
             'seed': 0,
         }
         master_random_state = np.random.RandomState(experiment_params['seed'])
@@ -69,17 +83,6 @@ def main(cfg):
 
     seed_everything(experiment_params['seed'])
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-    # load dataset
-    data_dir = cfg['dataset_file_path'][running_device]
-    X_train, X_test, y_train, y_test, y_train_true, y_test_true = (
-        load_dataset(name=experiment_params['dataset_name'], data_dir=data_dir))
-
-    classes = np.unique(y_train_true)
-    n_classes = len(classes)
-    n_features = X_train.shape[1]
-    n_annotators = y_train.shape[1]
-    n_samples = X_train.shape[0]
 
     # add metric dictionary
     metric_dict = {
@@ -97,7 +100,7 @@ def main(cfg):
 
     # randomly pick annotation initially
     y_partial = np.full_like(y_train, fill_value=MISSING_LABEL)
-    initial_label_size = 128
+    initial_label_size = int(experiment_params['batch_size'])
 
     for a_idx in range(n_annotators):
         random_state = np.random.RandomState(a_idx)
@@ -108,8 +111,11 @@ def main(cfg):
         y_partial[selected_idx_a, a_idx] = y_train[selected_idx_a, a_idx]
 
     # Create query strategy
-    sa_qs = create_instance_query_strategy(experiment_params['instance_query_strategy'], random_state=gen_random_state(master_random_state), missing_label=MISSING_LABEL)
-    ma_qs = SingleAnnotatorWrapper(sa_qs, random_state=gen_random_state(master_random_state), missing_label=MISSING_LABEL)
+    sa_qs = create_instance_query_strategy(experiment_params['instance_query_strategy'],
+                                           random_state=gen_random_state(master_random_state),
+                                           missing_label=MISSING_LABEL)
+    ma_qs = SingleAnnotatorWrapper(sa_qs, random_state=gen_random_state(master_random_state),
+                                   missing_label=MISSING_LABEL)
 
     candidate_indices = np.arange(n_samples)
 
@@ -130,38 +136,37 @@ def main(cfg):
 
         for c in range(experiment_params['n_cycles'] + 1):
             if c > 0:
+                if experiment_params['annotator_query_strategy'] == 'random':
+                    A_perf = A
+                elif experiment_params['annotator_query_strategy'] == 'round-robin':
+                    A_perf = copy.deepcopy(A)
+                    res_anno = ((c - 1) * experiment_params['n_annotators_per_sample']) % n_annotators
+                    A_perf[:, res_anno: res_anno + experiment_params['n_annotators_per_sample']] = 1
+                elif experiment_params['annotator_query_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
+                    A_perf = net.predict_annotator_perf(X_train)
+
                 is_ulbld_query = np.copy(is_ulbld)
                 is_candidate = is_ulbld_query.all(axis=-1)
                 candidates = candidate_indices[is_candidate]
 
-                if experiment_params['annotator_query_strategy'] == 'random':
-                    A_perf = A
-                    A_perf = A_perf[candidates]
-                elif experiment_params['annotator_query_strategy'] == 'round-robin':
-                    A_perf = copy.deepcopy(A)
-                    res_anno = ((c-1) * experiment_params['n_annotators_per_sample']) % n_annotators
-                    A_perf[:, res_anno: res_anno + experiment_params['n_annotators_per_sample']] = 1
-                    A_perf = A_perf[candidates]
-                elif experiment_params['annotator_query_strategy'] in ["trace-reg", "geo-reg-f", "geo-reg-w"]:
-                    A_perf = net.predict_annotator_perf()
-                    print(A_perf)
-
                 query_params_dict = {}
                 if experiment_params['instance_query_strategy'] == "uncertainty":
                     query_params_dict = {"clf": net, "fit_clf": False}
+
                 query_indices = call_func(
                     ma_qs.query,
                     X=X_train,
                     y=y_partial,
                     candidates=candidates,
-                    A_perf=A_perf,
+                    A_perf=A_perf[candidates],
                     batch_size=experiment_params['batch_size'],
                     n_annotators_per_sample=experiment_params['n_annotators_per_sample'],
                     **query_params_dict,
                 )
                 y_partial[idx(query_indices)] = y_train[idx(query_indices)]
 
-            number_annotation_annotator, number_correct_label_annotator, correct_label_ratio = get_correct_label_ratio(y_partial, y_train_true, MISSING_LABEL)
+            number_annotation_annotator, number_correct_label_annotator, correct_label_ratio = get_correct_label_ratio(
+                y_partial, y_train_true, MISSING_LABEL)
             metric_dict['error_annotation_rate'].append(1 - correct_label_ratio)
             for i in range(n_annotators):
                 metric_dict[f"Number_of_annotations_{i}"].append(number_annotation_annotator[i])
@@ -230,8 +235,3 @@ def main(cfg):
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
