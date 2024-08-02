@@ -38,11 +38,11 @@ def seed_everything(seed=42):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    running_device = 'local'
+    running_device = 'server'
 
     # load dataset
     data_dir = cfg['dataset_file_path'][running_device]
-    name = cfg['dataset_name'] if running_device == 'server' else 'letter'
+    name = cfg['dataset'] if running_device == 'server' else 'letter'
     X_train, X_test, y_train, y_test, y_train_true, y_test_true = (
         load_dataset(name=name, data_dir=data_dir)
     )

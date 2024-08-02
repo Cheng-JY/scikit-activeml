@@ -68,9 +68,9 @@ def main(cfg):
                         r_mean_and_std = pd.concat(mean_and_std, axis=1)
                         label = (f'{iqs_name} '
                                  f'+ {aqs_name} '
-                                 f'+ {ls_name}'
+                                 f'+ {ls_name} '
                                  f'+ {n_per_sample}')
-                        output_path = f'{cfg["output_file_path"][running_device]}/result/{label}.csv'
+                        output_path = f'{cfg["output_file_path"][running_device]}/result_letter/{label}.csv'
                         r_mean_and_std.to_csv(output_path, index=False)
 
 
