@@ -10,12 +10,11 @@ def plot_graph(
         annotator_query_strategies,
         learning_strategies,
         n_annotator_list,
+        batch_size,
         metric,
         name,
 ):
     output_path = '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/output_image/'
-
-    batch_size = 256
 
     for instance_query_strategy in instance_query_strategies:
         for annotator_query_strategy in annotator_query_strategies:
@@ -30,7 +29,8 @@ def plot_graph(
                     label = (f'{instance_query_strategy} '
                              f'+ {annotator_query_strategy} '
                              f'+ {learning_strategy} '
-                             f'+ {n_annotator_per_instance}')
+                             f'+ {n_annotator_per_instance} '
+                             f'+ {batch_size}')
                     df = pd.read_csv(f'{output_path}/result_letter/{label}.csv')
                     metric_mean = df[f'{metric}_mean'].to_numpy()
                     metric_std = df[f'{metric}_std'].to_numpy()
@@ -63,6 +63,7 @@ if __name__ == '__main__':
         annotator_query_strategies=['trace-reg', 'geo-reg-f', 'geo-reg-w'],
         learning_strategies=learning_strategies,
         n_annotator_list=[1, 2, 3],
+        batch_size=312,
         metric='misclassification',
         name='RQ4-intelligent'
     )
