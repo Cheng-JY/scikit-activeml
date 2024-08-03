@@ -13,7 +13,7 @@ def main(cfg):
     batch_size_list = [6, 12]
     dataset = 'letter'
     n_cycles = 25
-    seed_list = [0]
+    seed_list = [0, 1, 2, 3, 4]
 
     file_path = "srun python /mnt/stud/home/jcheng/scikit-activeml/experiment/experiment.py"
 
