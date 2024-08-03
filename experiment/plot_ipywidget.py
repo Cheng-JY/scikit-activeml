@@ -63,7 +63,7 @@ if __name__ == '__main__':
         annotator_query_strategies=['trace-reg', 'geo-reg-f', 'geo-reg-w'],
         learning_strategies=learning_strategies,
         n_annotator_list=[1, 2, 3],
-        batch_size=312,
-        metric='misclassification',
-        name='RQ4-intelligent'
+        batch_size=156,
+        metric='error_annotation_rate',
+        name='RQ4-intelligent-156'
     )
