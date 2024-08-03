@@ -38,7 +38,7 @@ def seed_everything(seed=42):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    running_device = 'server'
+    running_device = 'local'
 
     # load dataset
     data_dir = cfg['dataset_file_path'][running_device]
@@ -68,9 +68,9 @@ def main(cfg):
     else:
         experiment_params = {
             'dataset_name': 'letter',
-            'instance_query_strategy': "coreset",  # [random, uncertainty, coreset]
-            'annotator_query_strategy': "geo-reg-f",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
-            'learning_strategy': "geo-reg-f",
+            'instance_query_strategy': "gsx",  # [random, uncertainty, coreset, gsx]
+            'annotator_query_strategy': "trace-reg",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
+            'learning_strategy': "trace-reg",
             # [majority_vote, trace-reg, geo-reg-f, geo-reg-w] [r-m, rr-m, r-t, t-t, gf-gf, gw-gw]
             'batch_size': 12 * n_classes,  # 6*n_classes,
             'n_annotators_per_sample': 2,  # 1, 2, 3
