@@ -38,7 +38,7 @@ def seed_everything(seed=42):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    running_device = 'local'
+    running_device = 'server'
 
     # load dataset
     data_dir = cfg['dataset_file_path'][running_device]
