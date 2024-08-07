@@ -3,17 +3,11 @@ import os
 import sys
 import warnings
 
+import matplotlib.pyplot as plt
+
 sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
 # sys.path.append("/Users/chengjiaying/PycharmProjects/scikit-activeml")
 warnings.filterwarnings("ignore")
-
-import matplotlib.pyplot as plt
-import mlflow
-import numpy as np
-import hydra
-import pandas as pd
-
-from copy import deepcopy
 
 from skactiveml.classifier import SkorchClassifier
 from skactiveml.classifier.multiannotator import RegCrowdNetClassifier
@@ -22,7 +16,6 @@ from skactiveml.utils import majority_vote, is_labeled, is_unlabeled, call_func
 
 from skorch.callbacks import LRScheduler
 
-import torch
 from torch import nn
 
 from classifier.classifier import TabularClassifierModule, TabularClassifierGetEmbedXModule, \
@@ -38,7 +31,7 @@ def seed_everything(seed=42):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    running_device = 'local'
+    running_device = 'server'
 
     # load dataset
     data_dir = cfg['dataset_file_path'][running_device]
@@ -68,13 +61,13 @@ def main(cfg):
     else:
         experiment_params = {
             'dataset_name': 'dopanim',
-            'instance_query_strategy': "random",  # [random, uncertainty, coreset, gsx]
-            'annotator_query_strategy': "random",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
-            'learning_strategy': "majority-vote",
+            'instance_query_strategy': "gsx",  # [random, uncertainty, coreset, gsx]
+            'annotator_query_strategy': "trace-reg",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
+            'learning_strategy': "trace-reg",
             # [majority_vote, trace-reg, geo-reg-f, geo-reg-w] [r-m, rr-m, r-t, t-t, gf-gf, gw-gw]
             'batch_size': 12 * n_classes,  # 6*n_classes,
             'n_annotators_per_sample': 1,  # 1, 2, 3
-            'n_cycles': 25,  # datensatz abhängig ausgelearnt # convergiert
+            'n_cycles': 50,  # datensatz abhängig ausgelearnt # convergiert
             'seed': 0,
         }
         master_random_state = np.random.RandomState(experiment_params['seed'])
@@ -189,6 +182,7 @@ def main(cfg):
                     device=device,
                     callbacks=[lr_scheduler],
                     iterator_train__drop_last=True,
+                    iterator_train__shuffle=True,
                     **hyper_parameter,
                 )
                 y_agg = majority_vote(y_partial, classes=classes, missing_label=MISSING_LABEL,
@@ -215,6 +209,7 @@ def main(cfg):
                     lmbda="auto",
                     regularization=experiment_params['learning_strategy'],
                     iterator_train__drop_last=True,
+                    iterator_train__shuffle=True,
                     **hyper_parameter,
                 )
                 net.fit(X_train, y_partial)
@@ -226,6 +221,8 @@ def main(cfg):
             print(c, accuracy)
             is_ulbld = is_unlabeled(y_partial, missing_label=MISSING_LABEL)
 
+        plt.plot(metric_dict['misclassification'])
+        plt.show()
         df = pd.DataFrame.from_dict(data=metric_dict)
         outpath = active_run.info.artifact_uri
         outpath = os.path.join(outpath, 'result.csv')

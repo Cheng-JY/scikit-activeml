@@ -4,6 +4,12 @@ hyper_parameter_letter:
   lr: 0.01
   optimizer__weight_decay: 0.0
 
+hyper_parameter_dopanim:
+  max_epochs: 50
+  batch_size: 32
+  lr: 0.001
+  optimizer__weight_decay: 0.0
+
 ml_flow_tracking:
   experiment_name: 'Experiment_Nr_8'
   tracking_file_path_local: '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/tracking'

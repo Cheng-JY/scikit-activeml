@@ -25,6 +25,25 @@ class TabularClassifierModule(nn.Module):
         return logit_class
 
 
+class MLPModule(nn.Module):
+    def __init__(self, n_classes, n_features, dropout):
+        super(MLPModule, self).__init__()
+        n_hidden_neurons = 128
+        self.embed_X_block = nn.Sequential(
+            nn.Linear(in_features=n_features, out_features=n_hidden_neurons),
+            nn.BatchNorm1d(num_features=n_hidden_neurons),
+            nn.Dropout(p=dropout),
+            nn.ReLU(),
+        )
+        self.mlp = nn.Linear(in_features=n_hidden_neurons, out_features=n_classes)
+
+    def forward(self, x):
+        embed_x = self.embed_X_block(x)
+        logit_class = self.mlp(embed_x)
+
+        return logit_class
+
+
 class TabularClassifierGetEmbedXModule(nn.Module):
     def __init__(self, n_features, dropout):
         super(TabularClassifierGetEmbedXModule, self).__init__()
