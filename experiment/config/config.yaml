@@ -1,4 +1,4 @@
-hyper_parameter:
+hyper_parameter_letter:
   max_epochs: 50
   batch_size: 64
   lr: 0.01
@@ -10,8 +10,8 @@ ml_flow_tracking:
   tracking_file_path_server: '/mnt/stud/home/jcheng/scikit-activeml/experiment/tracking'
 
 dataset_file_path:
-  local: '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/dataset/'
-  server: '/mnt/stud/home/jcheng/scikit-activeml/experiment/dataset/'
+  local: '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/dataset'
+  server: '/mnt/stud/home/jcheng/scikit-activeml/experiment/dataset'
 
 output_file_path:
   local: '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/output_image/'

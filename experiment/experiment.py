@@ -38,13 +38,13 @@ def seed_everything(seed=42):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    running_device = 'server'
+    running_device = 'local'
 
     # load dataset
     data_dir = cfg['dataset_file_path'][running_device]
-    name = cfg['dataset'] if running_device == 'server' else 'letter'
+    data_name = cfg['dataset'] if running_device == 'server' else 'dopanim'
     X_train, X_test, y_train, y_test, y_train_true, y_test_true = (
-        load_dataset(name=name, data_dir=data_dir)
+        load_dataset(name=data_name, data_dir=data_dir)
     )
 
     classes = np.unique(y_train_true)
@@ -67,13 +67,13 @@ def main(cfg):
         master_random_state = np.random.RandomState(experiment_params['seed'])
     else:
         experiment_params = {
-            'dataset_name': 'letter',
-            'instance_query_strategy': "gsx",  # [random, uncertainty, coreset, gsx]
-            'annotator_query_strategy': "trace-reg",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
-            'learning_strategy': "trace-reg",
+            'dataset_name': 'dopanim',
+            'instance_query_strategy': "random",  # [random, uncertainty, coreset, gsx]
+            'annotator_query_strategy': "random",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
+            'learning_strategy': "majority-vote",
             # [majority_vote, trace-reg, geo-reg-f, geo-reg-w] [r-m, rr-m, r-t, t-t, gf-gf, gw-gw]
             'batch_size': 12 * n_classes,  # 6*n_classes,
-            'n_annotators_per_sample': 2,  # 1, 2, 3
+            'n_annotators_per_sample': 1,  # 1, 2, 3
             'n_cycles': 25,  # datensatz abhängig ausgelearnt # convergiert
             'seed': 0,
         }
@@ -95,7 +95,7 @@ def main(cfg):
         metric_dict[f"Number_of_correct_annotation_{i}"] = []
 
     # Get the hyperparameter for model training latter
-    hyper_parameter = cfg['hyper_parameter']
+    hyper_parameter = cfg[f'hyper_parameter_{data_name}']
     lr_scheduler = LRScheduler(policy='CosineAnnealingLR', T_max=hyper_parameter['max_epochs'])
 
     # randomly pick annotation initially
