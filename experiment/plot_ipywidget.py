@@ -9,6 +9,7 @@ colors = ['red', 'blue', 'green', 'orange']
 
 
 def plot_graph(
+        dataset,
         question,
         instance_query_strategies,
         annotator_query_strategies,
@@ -35,7 +36,7 @@ def plot_graph(
                              f'+ {learning_strategy} '
                              f'+ {n_annotator_per_instance} '
                              f'+ {batch_size}')
-                    df = pd.read_csv(f'{output_path}/result_letter/{label}.csv')
+                    df = pd.read_csv(f'{output_path}/result_{dataset}/{label}.csv')
                     metric_mean = df[f'{metric}_mean'].to_numpy()
                     metric_std = df[f'{metric}_std'].to_numpy()
                     if question == 'RQ1':
@@ -61,9 +62,9 @@ def plot_graph(
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     plt.ylabel(f"{metric}")
-    title = f'letter_{metric}_{question}_{batch_size}_{name}'
+    title = f'{dataset}_{metric}_{question}_{batch_size}_{name}'
     plt.title(title)
-    output_path = f'{output_path}/letter_plot/{title}.pdf'
+    output_path = f'{output_path}/{dataset}_plot/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
 
 
@@ -77,13 +78,15 @@ if __name__ == '__main__':
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
 
-    question = 'RQ4'
+    dataset = 'letter'
+    question = 'RQ2'
     metric = 'misclassification'
     intelligent = False
     batch_size = 312
     # RQ1: Instance selecting 312, 156
     if question == 'RQ1':
         plot_graph(
+            dataset=dataset,
             question=question,
             instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset'],
             annotator_query_strategies=['random', 'round-robin'],
@@ -94,6 +97,7 @@ if __name__ == '__main__':
         )
     elif question == 'RQ2':
         plot_graph(
+            dataset=dataset,
             question=question,
             instance_query_strategies=['random'],
             annotator_query_strategies=['random', 'round-robin', 'trace-reg'],
@@ -104,6 +108,7 @@ if __name__ == '__main__':
         )
     elif question == 'RQ3':
         plot_graph(
+            dataset=dataset,
             question=question,
             instance_query_strategies=['random'],
             annotator_query_strategies=['random', 'round-robin'],
@@ -115,6 +120,7 @@ if __name__ == '__main__':
     elif question == 'RQ4':
         if not intelligent:
             plot_graph(
+                dataset=dataset,
                 question=question,
                 instance_query_strategies=['random'],
                 annotator_query_strategies=['random', 'round-robin'],
@@ -126,6 +132,7 @@ if __name__ == '__main__':
             )
         else:
             plot_graph(
+                dataset=dataset,
                 question=question,
                 instance_query_strategies=['random'],
                 annotator_query_strategies=['trace-reg', 'geo-reg-f', 'geo-reg-w'],
