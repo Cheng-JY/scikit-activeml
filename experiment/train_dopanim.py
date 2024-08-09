@@ -19,7 +19,8 @@ from skorch.callbacks import LRScheduler
 
 from torch import nn
 
-from classifier.classifier import MLPModule, TabularClassifierModule
+from classifier.classifier import MLPModule, TabularClassifierModule, TabularClassifierGetEmbedXModule, \
+    TabularClassifierGetOutputModule
 from utils import *
 
 
@@ -71,20 +72,42 @@ def main(cfg):
                               random_state=hyper_parameter['random_state'])
         accuracy = accuracy_score(y_agg, y_train_true)
 
-        net = SkorchClassifier(
-            TabularClassifierModule,
-            module__n_classes=n_classes,
-            module__n_features=n_features,
-            module__dropout=0.5,
+        # net = SkorchClassifier(
+        #     TabularClassifierModule,
+        #     module__n_classes=n_classes,
+        #     module__n_features=n_features,
+        #     module__dropout=0.5,
+        #     classes=dataset_classes,
+        #     missing_label=MISSING_LABEL,
+        #     cost_matrix=None,
+        #     criterion=nn.CrossEntropyLoss(),
+        #     train_split=None,
+        #     verbose=False,
+        #     optimizer=torch.optim.RAdam,
+        #     device=device,
+        #     callbacks=[lr_scheduler],
+        #     iterator_train__drop_last=True,
+        #     iterator_train__shuffle=True,
+        #     **hyper_parameter,
+        # )
+
+        gt_net = TabularClassifierGetEmbedXModule(n_features=n_features, dropout=0.5)
+        output_net = TabularClassifierGetOutputModule(n_classes=n_classes)
+        net = RegCrowdNetClassifier(
+            module__gt_embed_x=gt_net,
+            module__gt_output=output_net,
+            n_classes=n_classes,
+            n_annotators=n_annotators,
             classes=dataset_classes,
             missing_label=MISSING_LABEL,
             cost_matrix=None,
-            criterion=nn.CrossEntropyLoss(),
             train_split=None,
             verbose=False,
             optimizer=torch.optim.RAdam,
             device=device,
             callbacks=[lr_scheduler],
+            lmbda=1e-3,
+            regularization='geo-reg-f',
             iterator_train__drop_last=True,
             iterator_train__shuffle=True,
             **hyper_parameter,
@@ -95,11 +118,9 @@ def main(cfg):
                               random_state=hyper_parameter['random_state'])
 
         start = time.time()
-        net.fit(X_train, y_agg)
+        net.fit(X_train, y_train)
         end = time.time()
 
-        print(net.predict(X_train[40:50]))
-        print(y_train_true[40:50])
         train_accuracy = net.score(X_train, y_train_true)
         test_accuracy = net.score(X_test, y_test_true)
 
