@@ -143,7 +143,7 @@ def main(cfg):
                 candidates = candidate_indices[is_candidate]
 
                 query_params_dict = {}
-                if experiment_params['instance_query_strategy'] == "uncertainty":
+                if experiment_params['instance_query_strategy'] in ["uncertainty", "clue"]:
                     query_params_dict = {"clf": net, "fit_clf": False}
 
                 query_indices = call_func(

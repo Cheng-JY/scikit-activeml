@@ -1,6 +1,6 @@
 import numpy as np
 
-from skactiveml.pool import UncertaintySampling, RandomSampling, CoreSet, GreedySamplingX
+from skactiveml.pool import UncertaintySampling, RandomSampling, CoreSet, GreedySamplingX, Clue, TypiClust
 
 
 def gen_seed(random_state:np.random.RandomState):
@@ -17,6 +17,8 @@ def create_instance_query_strategy(name, random_state, missing_label):
         'uncertainty': lambda random_state: UncertaintySampling(random_state=gen_seed(random_state), missing_label=missing_label),
         'coreset': lambda random_state: CoreSet(random_state=gen_seed(random_state), missing_label=missing_label),
         'gsx': lambda random_state: GreedySamplingX(random_state=gen_seed(random_state), missing_label=missing_label),
+        'clue': lambda random_state: Clue(random_state=gen_seed(random_state), missing_label=missing_label),
+        'typiclust': lambda random_state: TypiClust(random_state=gen_seed(random_state), missing_label=missing_label)
     }
     return query_strategy_factory_functions[name](random_state)
 
