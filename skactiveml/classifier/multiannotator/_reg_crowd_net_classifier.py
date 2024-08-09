@@ -95,7 +95,7 @@ class RegCrowdNetClassifier(SkorchClassifier, AnnotatorModelMixin):
         self.lmbda = lmbda
         self.regularization = regularization
         if self.lmbda == "auto":
-            self.lmbda = 1e-2 if self.regularization == "trace-reg" else 1e-4
+            self.lmbda = 1e-2 if self.regularization == "trace-reg" else 1e-3
 
     def get_loss(self, y_pred, y_true, *args, **kwargs):
         """Computes RegCrowdNet's loss according either to the article [1] or to the article [2].
