@@ -6,7 +6,7 @@ import hydra
 def main(cfg):
     output_dir = cfg["output_file_path"]["local"]
     bash_list = []
-    instance_query_strategies = ['random']
+    instance_query_strategies = ['uncertainty', 'coreset', 'gsx']
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     n_annotator_per_instance_list = [1, 2, 3]
