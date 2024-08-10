@@ -31,7 +31,7 @@ def seed_everything(seed=42):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    running_device = 'local'
+    running_device = 'server'
 
     # load dataset
     data_dir = cfg['dataset_file_path'][running_device]
@@ -60,14 +60,14 @@ def main(cfg):
         master_random_state = np.random.RandomState(experiment_params['seed'])
     else:
         experiment_params = {
-            'dataset_name': 'dopanim',
-            'instance_query_strategy': "gsx",  # [random, uncertainty, coreset, gsx]
+            'dataset_name': 'letter',
+            'instance_query_strategy': "random",  # [random, uncertainty, coreset, gsx]
             'annotator_query_strategy': "trace-reg",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
             'learning_strategy': "trace-reg",
             # [majority_vote, trace-reg, geo-reg-f, geo-reg-w] [r-m, rr-m, r-t, t-t, gf-gf, gw-gw]
             'batch_size': 12 * n_classes,  # 6*n_classes,
             'n_annotators_per_sample': 1,  # 1, 2, 3
-            'n_cycles': 40,  # datensatz abhängig ausgelearnt # convergiert
+            'n_cycles': 25,  # datensatz abhängig ausgelearnt # convergiert
             'seed': 0,
         }
         master_random_state = np.random.RandomState(experiment_params['seed'])
