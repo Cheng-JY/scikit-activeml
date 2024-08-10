@@ -31,7 +31,7 @@ def seed_everything(seed=42):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    running_device = 'server'
+    running_device = 'local'
 
     # load dataset
     data_dir = cfg['dataset_file_path'][running_device]
@@ -67,7 +67,7 @@ def main(cfg):
             # [majority_vote, trace-reg, geo-reg-f, geo-reg-w] [r-m, rr-m, r-t, t-t, gf-gf, gw-gw]
             'batch_size': 12 * n_classes,  # 6*n_classes,
             'n_annotators_per_sample': 1,  # 1, 2, 3
-            'n_cycles': 50,  # datensatz abhängig ausgelearnt # convergiert
+            'n_cycles': 40,  # datensatz abhängig ausgelearnt # convergiert
             'seed': 0,
         }
         master_random_state = np.random.RandomState(experiment_params['seed'])
@@ -124,6 +124,8 @@ def main(cfg):
     experiment_id = mlflow.create_experiment(name=ml_flow_tracking["experiment_name"]) \
         if exp is None else exp.experiment_id
 
+    available_annotators = is_labeled(y_train, missing_label=MISSING_LABEL)
+
     with (mlflow.start_run(experiment_id=experiment_id) as active_run):
         mlflow.log_params(experiment_params)
 
@@ -154,6 +156,7 @@ def main(cfg):
                     A_perf=A_perf[candidates],
                     batch_size=experiment_params['batch_size'],
                     n_annotators_per_sample=experiment_params['n_annotators_per_sample'],
+                    annotators=available_annotators[candidates],
                     **query_params_dict,
                 )
                 y_partial[idx(query_indices)] = y_train[idx(query_indices)]

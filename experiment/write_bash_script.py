@@ -6,14 +6,14 @@ import hydra
 def main(cfg):
     output_dir = cfg["output_file_path"]["local"]
     bash_list = []
-    instance_query_strategies = ['uncertainty', 'coreset', 'gsx']
+    instance_query_strategies = ['random', 'uncertainty', 'coreset', 'gsx', 'clue', 'typiclust']
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     n_annotator_per_instance_list = [1, 2, 3]
     batch_size_list = [6, 12]
-    dataset = 'dopanim'
-    n_cycles = 50
-    seed_list = [0, 1, 2, 3, 4]
+    dataset = 'letter'
+    n_cycles = 25
+    seed_list = [3, 4]
 
     file_path = "srun python /mnt/stud/home/jcheng/scikit-activeml/experiment/experiment.py"
 

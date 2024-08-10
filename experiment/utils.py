@@ -90,3 +90,21 @@ def load_dataset_dopanim(data_dir):
     return X_train, X_test, y_train, None, y_train_true, y_test_true
 
 
+if __name__ == "__main__":
+    data_dir = '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/dataset'
+    dataset = 'letter'
+    X_train, X_test, y_train, y_test, y_train_true, y_test_true = load_dataset(dataset, data_dir=data_dir)
+
+    classes = np.unique(y_train_true)
+    n_classes = len(classes)
+    n_features = X_train.shape[1]
+    n_annotators = y_train.shape[1]
+    n_samples = X_train.shape[0]
+    test_instances = X_test.shape[0]
+    print('n_annotators:', n_annotators)
+    print('n_samples:', n_samples)
+    print('n_features:', n_features)
+    print('n_classes:', n_classes)
+    print('test_instances:', n_annotators)
+
+
