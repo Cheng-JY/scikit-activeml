@@ -74,7 +74,7 @@ def main(cfg):
                                      f'+ {ls_name} '
                                      f'+ {n_per_sample} '
                                      f'+ {batch_size}')
-                            output_path = f'{cfg["output_file_path"][running_device]}/result_letter/{label}.csv'
+                            output_path = f'{cfg["output_file_path"][running_device]}/result_{dataset}/{label}.csv'
                             r_mean_and_std.to_csv(output_path, index=False)
 
 
