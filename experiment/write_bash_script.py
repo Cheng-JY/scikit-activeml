@@ -11,8 +11,13 @@ def main(cfg):
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     n_annotator_per_instance_list = [1, 2, 3]
     batch_size_list = [6, 12]
-    dataset = 'dopanim'
-    n_cycles = 25 if dataset == 'letter' else 40
+    dataset = 'agnews'
+    n_cycles_dict = {
+        'letter': 25,
+        'dopanim': 40,
+        'agnews': 40,
+    }
+    n_cycles = n_cycles_dict[dataset]
     seed_list = [2]
 
     file_path = "srun python /mnt/stud/home/jcheng/scikit-activeml/experiment/experiment.py"

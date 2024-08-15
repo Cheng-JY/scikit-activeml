@@ -66,8 +66,8 @@ def main(cfg):
             'optimizer__weight_decay': 1e-4,
             'random_state': 1,
         }
-        model = 'geo-reg-f'
-        regularization = 'geo-reg-f'
+        model = 'geo-reg-w'
+        regularization = 'geo-reg-w'
 
         lr_scheduler = LRScheduler(policy="CosineAnnealingLR", T_max=hyper_parameter['max_epochs'])
 
