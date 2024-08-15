@@ -66,7 +66,8 @@ def main(cfg):
             'optimizer__weight_decay': 1e-4,
             'random_state': 1,
         }
-        model = 'mv'
+        model = 'geo-reg-f'
+        regularization = 'geo-reg-f'
 
         lr_scheduler = LRScheduler(policy="CosineAnnealingLR", T_max=hyper_parameter['max_epochs'])
 
@@ -109,7 +110,7 @@ def main(cfg):
             device=device,
             callbacks=[lr_scheduler],
             lmbda=1e-3,
-            regularization='geo-reg-f',
+            regularization=regularization,
             iterator_train__drop_last=True,
             iterator_train__shuffle=True,
             **hyper_parameter,
@@ -119,7 +120,10 @@ def main(cfg):
         y_agg = majority_vote(y_train, classes=dataset_classes, missing_label=MISSING_LABEL,
                               random_state=hyper_parameter['random_state'])
 
-        if model == 'mv':
+        if model == 'gt':
+            net = net_mv
+            y_t = y_train_true
+        elif model == 'mv':
             net = net_mv
             y_t = y_agg
         else:

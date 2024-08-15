@@ -35,7 +35,7 @@ def main(cfg):
 
     # load dataset
     data_dir = cfg['dataset_file_path'][running_device]
-    data_name = cfg['dataset'] if running_device == 'server' else 'dopanim'
+    data_name = cfg['dataset'] if running_device == 'server' else 'agnews'
     X_train, X_test, y_train, y_test, y_train_true, y_test_true = (
         load_dataset(name=data_name, data_dir=data_dir)
     )
@@ -60,14 +60,14 @@ def main(cfg):
         master_random_state = np.random.RandomState(experiment_params['seed'])
     else:
         experiment_params = {
-            'dataset_name': 'letter',
+            'dataset_name': 'agnews',
             'instance_query_strategy': "random",  # [random, uncertainty, coreset, gsx]
-            'annotator_query_strategy': "trace-reg",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
-            'learning_strategy': "trace-reg",
+            'annotator_query_strategy': "random",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
+            'learning_strategy': "majority_vote",
             # [majority_vote, trace-reg, geo-reg-f, geo-reg-w] [r-m, rr-m, r-t, t-t, gf-gf, gw-gw]
             'batch_size': 12 * n_classes,  # 6*n_classes,
             'n_annotators_per_sample': 1,  # 1, 2, 3
-            'n_cycles': 25,  # datensatz abhängig ausgelearnt # convergiert
+            'n_cycles': 40,  # datensatz abhängig ausgelearnt # convergiert
             'seed': 0,
         }
         master_random_state = np.random.RandomState(experiment_params['seed'])
