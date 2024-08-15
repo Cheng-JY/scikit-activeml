@@ -13,7 +13,7 @@ def main(cfg):
     batch_size_list = [6, 12]
     dataset = 'dopanim'
     n_cycles = 25 if dataset == 'letter' else 40
-    seed_list = [0]
+    seed_list = [2]
 
     file_path = "srun python /mnt/stud/home/jcheng/scikit-activeml/experiment/experiment.py"
 

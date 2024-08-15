@@ -19,6 +19,8 @@ def load_dataset(name, data_dir, random_state=42):
         return load_dataset_letter_perf(data_dir)
     elif name == 'dopanim':
         return load_dataset_dopanim(data_dir)
+    elif name == 'agnews':
+        return load_dataset_agnews(data_dir)
 
 
 def load_dataset_letter(data_dir, random_state=42):
@@ -86,6 +88,16 @@ def load_dataset_dopanim(data_dir):
     y_train = np.load(f'{data_dir}/dopanim/dopanim_y_train.npy')
     y_train_true = np.load(f'{data_dir}/dopanim/dopanim_y_true_train.npy')
     y_test_true = np.load(f'{data_dir}/dopanim/dopanim_y_true_test.npy')
+
+    return X_train, X_test, y_train, None, y_train_true, y_test_true
+
+
+def load_dataset_agnews(data_dir):
+    X_train = np.load(f'{data_dir}/agnews/ag_news_sim_x_train.npy')
+    X_test = np.load(f'{data_dir}/agnews/ag_news_sim_x_test.npy')
+    y_train = np.load(f'{data_dir}/agnews/ag_news_sim_y_train.npy')
+    y_train_true = np.load(f'{data_dir}/agnews/ag_news_sim_y_true_train.npy')
+    y_test_true = np.load(f'{data_dir}/agnews/ag_news_sim_y_true_test.npy')
 
     return X_train, X_test, y_train, None, y_train_true, y_test_true
 
