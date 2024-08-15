@@ -18,7 +18,7 @@ def main(cfg):
         'agnews': 40,
     }
     n_cycles = n_cycles_dict[dataset]
-    seed_list = [2]
+    seed_list = [0, 1]
 
     file_path = "srun python /mnt/stud/home/jcheng/scikit-activeml/experiment/experiment.py"
 

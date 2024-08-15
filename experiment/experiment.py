@@ -5,8 +5,8 @@ import warnings
 
 import matplotlib.pyplot as plt
 
-sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
-# sys.path.append("/Users/chengjiaying/PycharmProjects/scikit-activeml")
+# sys.path.append("/mnt/stud/home/jcheng/scikit-activeml/")
+sys.path.append("/Users/chengjiaying/PycharmProjects/scikit-activeml")
 warnings.filterwarnings("ignore")
 
 from skactiveml.classifier import SkorchClassifier
@@ -31,7 +31,7 @@ def seed_everything(seed=42):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    running_device = 'server'
+    running_device = 'local'
 
     # load dataset
     data_dir = cfg['dataset_file_path'][running_device]
@@ -63,7 +63,7 @@ def main(cfg):
             'dataset_name': 'agnews',
             'instance_query_strategy': "random",  # [random, uncertainty, coreset, gsx]
             'annotator_query_strategy': "random",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
-            'learning_strategy': "majority_vote",
+            'learning_strategy': "majority-vote",
             # [majority_vote, trace-reg, geo-reg-f, geo-reg-w] [r-m, rr-m, r-t, t-t, gf-gf, gw-gw]
             'batch_size': 12 * n_classes,  # 6*n_classes,
             'n_annotators_per_sample': 1,  # 1, 2, 3
