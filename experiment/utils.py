@@ -104,7 +104,7 @@ def load_dataset_agnews(data_dir):
 
 if __name__ == "__main__":
     data_dir = '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/dataset'
-    dataset = 'letter'
+    dataset = 'agnews'
     X_train, X_test, y_train, y_test, y_train_true, y_test_true = load_dataset(dataset, data_dir=data_dir)
 
     classes = np.unique(y_train_true)
@@ -117,6 +117,21 @@ if __name__ == "__main__":
     print('n_samples:', n_samples)
     print('n_features:', n_features)
     print('n_classes:', n_classes)
-    print('test_instances:', n_annotators)
+    print('test_instances:', test_instances)
 
+    number_annotation_annotator, number_correct_label_annotator, correct_label_ratio = get_correct_label_ratio(y_train, y_train_true, missing_label=-1)
+    print('number_annotation_annotator:', number_annotation_annotator)
+    print('number_correct_label_annotator:', number_correct_label_annotator)
+    print('correct_label_ration:', correct_label_ratio)
+    print('correct_label:', 100 * number_correct_label_annotator / number_annotation_annotator)
+    print(number_annotation_annotator.sum() / n_samples)
+    print(number_correct_label_annotator.sum() / n_samples)
+
+    import csv
+    with open(f'{data_dir}/{dataset}.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+
+        writer.writerow(number_annotation_annotator)
+        writer.writerow(number_correct_label_annotator)
+        writer.writerow(100 * number_correct_label_annotator / number_annotation_annotator)
 
