@@ -23,7 +23,8 @@ def plot_heatmap(
         strategies,
         batch_size,
         metric,
-        question
+        question,
+        is_p
 ):
     fig, axs = plt.subplots(1, 2, sharey=True, gridspec_kw={'width_ratios': [6, 1]})
     a1 = axs[0].imshow(heat_map_numpy, cmap="YlGnBu",
@@ -43,17 +44,21 @@ def plot_heatmap(
 
     plt.colorbar(a2)
 
-    for i in range(6):
-        for j in range(6):
+    for i in range(len(strategies)):
+        for j in range(len(strategies)):
             text = axs[0].text(j, i, f"({heat_map_numpy[i, j]:.2f})",
                                ha="center", va="center", color=get_color(heat_map_numpy[i, j]))
 
-    for i in range(6):
+    for i in range(len(strategies)):
         text1 = axs[1].text(0, i, f"({heat_map_sum[i, 0]:.2f})",
                             ha="center", va="center", color=get_color(heat_map_sum[i, 0]))
 
     plt.title(dataset, loc="center")
-    path = f'{OUTPUT_PATH}/heatmap/{dataset}_{metric}_{question}_{batch_size}.pdf'
+    significant = 'is_significant' if is_p else ''
+    if question == 'RQ2':
+        path = f'{OUTPUT_PATH}/heatmap/{dataset}_{metric}_{question}_{batch_size}_{strategies[2]}_{significant}.pdf'
+    else:
+        path = f'{OUTPUT_PATH}/heatmap/{dataset}_{metric}_{question}_{batch_size}_{significant}.pdf'
     plt.savefig(path, bbox_inches="tight")
 
 
@@ -65,6 +70,7 @@ def pairwise_comparison_RQ1(
         n_annotator_list,
         batch_size,
         metric,
+        is_p,
 ):
     heat_map_numpy = np.zeros(shape=(len(instance_query_strategies), len(instance_query_strategies)))
 
@@ -92,8 +98,12 @@ def pairwise_comparison_RQ1(
                         for l in range(len(metric_mean_i)):
                             t_stat, p_value = stats.ttest_ind_from_stats(metric_mean_i[l], metric_std_i[l], 5,
                                                                          metric_mean_j[l], metric_std_j[l], 5)
-                            if p_value < 0.05 and metric_std_i[l] > metric_std_j[l]:
-                                win_counter += 1 / (len(metric_mean_i))
+                            if is_p:
+                                if p_value < 0.05 and metric_mean_i[l] < metric_mean_j[l]:
+                                    win_counter += 1 / len(metric_mean_i)
+                            else:
+                                if metric_mean_i[l] < metric_mean_j[l]:
+                                    win_counter += 1 / len(metric_mean_i)
 
             heat_map_numpy[idx_i, idx_j] = win_counter / sum_counter
 
@@ -102,8 +112,67 @@ def pairwise_comparison_RQ1(
     return heat_map_numpy, heat_map_sum
 
 
+def pairwise_comparison_RQ2(
+        dataset,
+        instance_query_strategies,
+        annotator_query_strategies,
+        learning_strategies,
+        n_annotator_list,
+        batch_size,
+        metric,
+        is_p,
+):
+    heat_map_numpy = np.zeros(shape=(len(annotator_query_strategies), len(annotator_query_strategies)))
+
+    for idx_a_i, annotator_query_strategy_i in enumerate(annotator_query_strategies):
+        for idx_a_j, annotator_query_strategy_j in enumerate(annotator_query_strategies):
+            if idx_a_i == idx_a_j:
+                continue
+            win_counter = 0
+            sum_counter = 0
+            for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
+                for idx_l, learning_strategy in enumerate(learning_strategies):
+                    for idx_n, n_annotator_per_instance in enumerate(n_annotator_list):
+                        sum_counter += 1
+                        metric_mean_i, metric_std_i, label_i = get_metric(dataset, instance_query_strategy,
+                                                                          annotator_query_strategy_i, learning_strategy,
+                                                                          n_annotator_per_instance, batch_size, metric)
+
+                        metric_mean_j, metric_std_j, label_j = get_metric(dataset, instance_query_strategy,
+                                                                          annotator_query_strategy_j, learning_strategy,
+                                                                          n_annotator_per_instance, batch_size, metric)
+
+                        for l in range(len(metric_mean_i)):
+                            t_stat, p_value = stats.ttest_ind_from_stats(metric_mean_i[l], metric_std_i[l], 5,
+                                                                         metric_mean_j[l], metric_std_j[l], 5)
+                            if is_p:
+                                if p_value < 0.05 and metric_mean_i[l] < metric_mean_j[l]:
+                                    win_counter += 1 / len(metric_mean_i)
+                            else:
+                                if metric_mean_i[l] < metric_mean_j[l]:
+                                    win_counter += 1 / len(metric_mean_i)
+
+            heat_map_numpy[idx_a_i, idx_a_j] = win_counter / sum_counter
+
+    heat_map_sum = np.sum(heat_map_numpy, axis=1).reshape(-1, 1) / (len(instance_query_strategies) - 1)
+
+    return heat_map_numpy, heat_map_sum
+
+
+def pairwise_comparison_RQ3():
+    pass
+
+
+def pairwise_comparison_RQ2_3():
+    pass
+
+
+def pairwise_comparison_RQ4():
+    pass
+
+
 if __name__ == '__main__':
-    dataset = 'dopanim'
+    dataset = 'letter'
     instance_query_strategies = ['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust']
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
@@ -114,20 +183,36 @@ if __name__ == '__main__':
     }
     batch_size = batch_size_dict[dataset] * 2
     metric = 'misclassification'
-    question = 'RQ1'
+    question = 'RQ2'
+    is_p = True
 
     if question == 'RQ1':
         heat_map_numpy, heat_map_sum = pairwise_comparison_RQ1(
             dataset=dataset,
             instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
-            annotator_query_strategies=['random', 'round-robin'],
+            annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
             learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
-            n_annotator_list=[1, 2, 3],
+            n_annotator_list=n_annotator_list,
             batch_size=batch_size,
             metric=metric,
+            is_p=is_p
         )
         strategies = instance_query_strategies
+    elif question == 'RQ2':
+        intelligent_strategy = 'trace-reg'
+        heat_map_numpy, heat_map_sum = pairwise_comparison_RQ2(
+            dataset=dataset,
+            instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
+            annotator_query_strategies=['random', 'round-robin', intelligent_strategy],
+            learning_strategies=[intelligent_strategy],
+            n_annotator_list=n_annotator_list,
+            batch_size=batch_size,
+            metric=metric,
+            is_p=is_p,
+        )
+        strategies = ['random', 'round-robin', intelligent_strategy]
 
+    print(heat_map_numpy)
 
     plot_heatmap(
         dataset=dataset,
@@ -136,5 +221,6 @@ if __name__ == '__main__':
         strategies=strategies,
         batch_size=batch_size,
         metric=metric,
-        question=question
+        question=question,
+        is_p=is_p
     )

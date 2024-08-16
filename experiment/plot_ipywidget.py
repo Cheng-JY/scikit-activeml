@@ -278,15 +278,15 @@ if __name__ == '__main__':
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
 
-    dataset = 'dopanim'
-    question = 'RQ4'
+    dataset = 'letter'
+    question = 'RQ1'
     metric = 'misclassification'
     intelligent = False
     batch_size_dict = {
         'letter': 156,
         'dopanim': 90,
     }
-    batch_size = batch_size_dict[dataset]
+    batch_size = batch_size_dict[dataset] * 2
     # RQ1: Instance selecting 312, 156
     if question == 'RQ1':
         # plot_graph(
@@ -388,4 +388,3 @@ if __name__ == '__main__':
             batch_size=batch_size,
             metric=metric,
         )
-
