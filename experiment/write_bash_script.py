@@ -10,7 +10,7 @@ def main(cfg):
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     n_annotator_per_instance_list = [1, 2, 3]
-    batch_size_list = [6, 12]
+    batch_size_list = [36, 72]
     dataset = 'agnews'
     n_cycles_dict = {
         'letter': 25,

@@ -283,11 +283,11 @@ if __name__ == '__main__':
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
 
-    dataset = 'letter'
-    question = 'RQ4'
+    dataset = 'dopanim'
+    question = 'RQ1'
     metric = 'misclassification'
     intelligent = False
-    batch_size = 312
+    batch_size = 180
     # RQ1: Instance selecting 312, 156
     if question == 'RQ1':
         # plot_graph(
