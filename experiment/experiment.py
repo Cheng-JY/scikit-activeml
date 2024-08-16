@@ -143,6 +143,7 @@ def main(cfg):
                 is_ulbld_query = np.copy(is_ulbld)
                 is_candidate = is_ulbld_query.all(axis=-1)
                 candidates = candidate_indices[is_candidate]
+                # subset with 10,000 instance
 
                 query_params_dict = {}
                 if experiment_params['instance_query_strategy'] in ["uncertainty", "clue"]:
