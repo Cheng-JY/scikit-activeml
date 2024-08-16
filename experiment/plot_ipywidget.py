@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import ipywidgets as widgets
-from IPython.core.display_functions import display
+from plot_utils import *
 
 linestyles = ['solid', 'dotted', 'dashed', 'dashdot']
 colors = ['red', 'blue', 'green', 'orange']
@@ -31,14 +30,10 @@ def plot_graph(
                     # if (annotator_query_strategy in ['random', 'round-robin'] and
                     #         learning_strategy != 'majority-vote'):
                     #     continue
-                    label = (f'{instance_query_strategy} '
-                             f'+ {annotator_query_strategy} '
-                             f'+ {learning_strategy} '
-                             f'+ {n_annotator_per_instance} '
-                             f'+ {batch_size}')
-                    df = pd.read_csv(f'{output_path}/result_{dataset}/{label}.csv')
-                    metric_mean = df[f'{metric}_mean'].to_numpy()
-                    metric_std = df[f'{metric}_std'].to_numpy()
+
+                    metric_mean, metric_std, label = get_metric(dataset, instance_query_strategy, annotator_query_strategy,
+                               learning_strategy, n_annotator_per_instance, batch_size, metric)
+
                     if question == 'RQ1':
                         plt.errorbar(np.arange(batch_size, (len(metric_mean) + 1) * batch_size, batch_size),
                                      metric_mean,
@@ -114,7 +109,7 @@ def eval_RQ1(
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     plt.ylabel(f"{metric}")
-    title = f'{dataset}_{metric}_{question}'
+    title = f'{dataset}_{metric}_{question}_{batch_size}'
     plt.title(title)
     output_path = f'{output_path}/{dataset}_plot/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
@@ -165,7 +160,7 @@ def eval_RQ2(
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     plt.ylabel(f"{metric}")
-    title = f'{dataset}_{metric}_{question}'
+    title = f'{dataset}_{metric}_{question}_{batch_size}'
     plt.title(title)
     output_path = f'{output_path}/{dataset}_plot/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
@@ -216,7 +211,7 @@ def eval_RQ3(
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     plt.ylabel(f"{metric}")
-    title = f'{dataset}_{metric}_{question}'
+    title = f'{dataset}_{metric}_{question}_{batch_size}'
     plt.title(title)
     output_path = f'{output_path}/{dataset}_plot/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
@@ -260,14 +255,14 @@ def eval_RQ4(
         var_a = var_annotator_query.mean(axis=0)
         std_a = np.sqrt(var_a)
         plt.errorbar(np.arange(batch_size, (len(mean_a) + 1) * batch_size, batch_size),
-                     mean_a, std_a,
+                     mean_a, std_a / np.sqrt(5),
                      label=f"({np.mean(mean_a):.4f}) {n_annotator_per_instance}", alpha=0.3)
 
     plt.legend(bbox_to_anchor=(1.05, 1), fontsize=6, loc='upper right', ncol=2)
     plt.tight_layout()
     plt.xlabel('# Labels queried')
     plt.ylabel(f"{metric}")
-    title = f'{dataset}_{metric}_{question}'
+    title = f'{dataset}_{metric}_{question}_{batch_size}'
     plt.title(title)
     output_path = f'{output_path}/{dataset}_plot/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
@@ -284,10 +279,14 @@ if __name__ == '__main__':
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
 
     dataset = 'dopanim'
-    question = 'RQ1'
+    question = 'RQ4'
     metric = 'misclassification'
     intelligent = False
-    batch_size = 180
+    batch_size_dict = {
+        'letter': 156,
+        'dopanim': 90,
+    }
+    batch_size = batch_size_dict[dataset]
     # RQ1: Instance selecting 312, 156
     if question == 'RQ1':
         # plot_graph(
@@ -325,8 +324,8 @@ if __name__ == '__main__':
         eval_RQ2(
             dataset=dataset,
             instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
-            annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
-            learning_strategies=['trace-reg', 'geo-reg-f', 'geo-reg-w'],
+            annotator_query_strategies=['random', 'round-robin', 'geo-reg-w'],
+            learning_strategies=['geo-reg-w'],
             n_annotator_list=[1, 2, 3],
             batch_size=batch_size,
             metric=metric,
