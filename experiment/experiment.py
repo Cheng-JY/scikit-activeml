@@ -31,7 +31,7 @@ def seed_everything(seed=42):
 
 @hydra.main(config_path="config", config_name="config", version_base="1.1")
 def main(cfg):
-    running_device = 'local'
+    running_device = 'server'
 
     # load dataset
     data_dir = cfg['dataset_file_path'][running_device]
@@ -143,7 +143,8 @@ def main(cfg):
                 is_ulbld_query = np.copy(is_ulbld)
                 is_candidate = is_ulbld_query.all(axis=-1)
                 candidates = candidate_indices[is_candidate]
-                # subset with 10,000 instance
+                if data_name == 'agnews':
+                    candidates = candidates[candidates % 10 == c % 10]
 
                 query_params_dict = {}
                 if experiment_params['instance_query_strategy'] in ["uncertainty", "clue"]:
