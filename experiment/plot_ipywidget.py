@@ -5,7 +5,10 @@ from plot_utils import *
 
 linestyles = ['solid', 'dotted', 'dashed', 'dashdot']
 colors = ['red', 'blue', 'green', 'orange']
-
+n_annotators_dict = {
+    'letter': 10,
+    'dopanim': 20,
+}
 
 def plot_graph(
         dataset,
@@ -17,8 +20,10 @@ def plot_graph(
         batch_size,
         metric,
         name='',
+        plot_title='',
 ):
     output_path = '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/output_image/'
+    init_batch_size = batch_size * n_annotators_dict[dataset]
 
     for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
         for idx_a, annotator_query_strategy in enumerate(annotator_query_strategies):
@@ -35,10 +40,10 @@ def plot_graph(
                                learning_strategy, n_annotator_per_instance, batch_size, metric)
 
                     if question == 'RQ1':
-                        plt.errorbar(np.arange(batch_size, (len(metric_mean) + 1) * batch_size, batch_size),
+                        plt.errorbar(np.arange(init_batch_size, len(metric_mean) * batch_size + init_batch_size, batch_size),
                                      metric_mean,
                                      metric_std,
-                                     label=f"({np.mean(metric_mean):.4f}) {label}", alpha=0.3)
+                                     label=f"({np.mean(metric_mean):.4f}) {instance_query_strategy}", alpha=0.3)
                     elif question == 'RQ2':
                         plt.errorbar(np.arange(batch_size, (len(metric_mean) + 1) * batch_size, batch_size),
                                      metric_mean,
@@ -53,12 +58,12 @@ def plot_graph(
                                      metric_std, linestyle=linestyles[idx_n], color=colors[idx_a],
                                      label=f"({np.mean(metric_mean):.4f}) {label}", alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(1.05, 1), fontsize=6, loc='upper right', ncol=2)
+    plt.legend(bbox_to_anchor=(0.5, -0.35), fontsize=10, loc='lower center', ncol=3)
     plt.tight_layout()
-    plt.xlabel('# Labels queried')
+    plt.xlabel('# Annotations queried')
     plt.ylabel(f"{metric}")
     title = f'{dataset}_{metric}_{question}_{batch_size}_{name}'
-    plt.title(title)
+    plt.title(plot_title)
     output_path = f'{output_path}/{dataset}_plot/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
 
@@ -130,8 +135,8 @@ def eval_RQ2(
         mean_annotator_query = []
         std_annotator_query = []
         for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
-            for idx_l, learning_strategy in enumerate(learning_strategies):
-                for idx_n, n_annotator_per_instance in enumerate(n_annotator_list):
+            for idx_n, n_annotator_per_instance in enumerate(n_annotator_list):
+                for idx_l, learning_strategy in enumerate(learning_strategies):
                     if (annotator_query_strategy in ['trace-reg', 'geo-reg-f', 'geo-reg-w'] and
                             learning_strategy != annotator_query_strategy):
                         continue
@@ -161,6 +166,53 @@ def eval_RQ2(
     plt.xlabel('# Labels queried')
     plt.ylabel(f"{metric}")
     title = f'{dataset}_{metric}_{question}_{batch_size}'
+    plt.title(title)
+    output_path = f'{output_path}/{dataset}_plot/{title}.pdf'
+    plt.savefig(output_path, bbox_inches="tight")
+
+
+def plot_RQ2(
+        dataset,
+        instance_query_strategies,
+        annotator_query_strategies,
+        learning_strategies,
+        n_annotator_list,
+        batch_size,
+        metric,
+    ):
+    output_path = '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/output_image/'
+
+    idx_linestyle_dict = {
+        'random': 0,
+        'round-robin': 1,
+        'trace-reg': 2,
+        'geo-reg-f': 2,
+        'geo-reg-w': 2,
+    }
+
+    for idx_l, learning_strategy in enumerate(learning_strategies):
+        for idx_a, annotator_query_strategy in enumerate(annotator_query_strategies):
+            for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
+                for idx_n, n_annotator_per_instance in enumerate(n_annotator_list):
+                    if (annotator_query_strategy in ['trace-reg', 'geo-reg-f', 'geo-reg-w'] and
+                            learning_strategy != annotator_query_strategy):
+                        continue
+                    metric_mean, metric_std, label = get_metric(dataset, instance_query_strategy,
+                                                                annotator_query_strategy,
+                                                                learning_strategy, n_annotator_per_instance, batch_size,
+                                                                metric)
+
+                    idx_linestyle = idx_linestyle_dict[annotator_query_strategy]
+
+                    plt.plot(np.arange(batch_size, (len(metric_mean) + 1) * batch_size, batch_size),
+                                 metric_mean, color=colors[idx_l], linestyle=linestyles[idx_linestyle],
+                                 label=f"({np.mean(metric_mean):.4f}) {label}", alpha=0.3)
+
+    plt.legend(bbox_to_anchor=(1.05, 1), fontsize=6, loc='upper right', ncol=2)
+    plt.tight_layout()
+    plt.xlabel('# Labels queried')
+    plt.ylabel(f"{metric}")
+    title = f'{dataset}_{metric}_{question}_{batch_size}_'
     plt.title(title)
     output_path = f'{output_path}/{dataset}_plot/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
@@ -279,36 +331,39 @@ if __name__ == '__main__':
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
 
     dataset = 'letter'
-    question = 'RQ1'
+    question = 'RQ3'
     metric = 'misclassification'
     intelligent = False
     batch_size_dict = {
         'letter': 156,
         'dopanim': 90,
     }
-    batch_size = batch_size_dict[dataset] * 2
+    batch_size = batch_size_dict[dataset]
     # RQ1: Instance selecting 312, 156
     if question == 'RQ1':
-        # plot_graph(
+        plot_graph(
+            dataset=dataset,
+            question=question,
+            instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
+            annotator_query_strategies=['random'],
+            learning_strategies=['Trace-reg'],
+            n_annotator_list=[1],
+            batch_size=batch_size,
+            metric=metric,
+            name='r-t',
+            plot_title=f'Dataset: Letter, T: Random, R: Trace-reg, '
+                       f'B: 6 per class, W: 1 annotator per instance'
+        )
+
+        # eval_RQ1(
         #     dataset=dataset,
-        #     question=question,
         #     instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
-        #     annotator_query_strategies=['round-robin'],
-        #     learning_strategies=['trace-reg'],
+        #     annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+        #     learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
         #     n_annotator_list=[1],
         #     batch_size=batch_size,
         #     metric=metric,
         # )
-
-        eval_RQ1(
-            dataset=dataset,
-            instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
-            annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
-            learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
-            n_annotator_list=[1],
-            batch_size=batch_size,
-            metric=metric,
-        )
     elif question == 'RQ2':
         # plot_graph(
         #     dataset=dataset,
@@ -321,12 +376,22 @@ if __name__ == '__main__':
         #     metric=metric,
         # )
 
-        eval_RQ2(
+        # eval_RQ2(
+        #     dataset=dataset,
+        #     instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
+        #     annotator_query_strategies=['random', 'round-robin', 'geo-reg-w'],
+        #     learning_strategies=['geo-reg-w'],
+        #     n_annotator_list=[1, 2, 3],
+        #     batch_size=batch_size,
+        #     metric=metric,
+        # )
+
+        plot_RQ2(
             dataset=dataset,
-            instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
-            annotator_query_strategies=['random', 'round-robin', 'geo-reg-w'],
-            learning_strategies=['geo-reg-w'],
-            n_annotator_list=[1, 2, 3],
+            instance_query_strategies=['uncertainty'],
+            annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+            learning_strategies=['trace-reg', 'geo-reg-f', 'geo-reg-w'],
+            n_annotator_list=[3],
             batch_size=batch_size,
             metric=metric,
         )
@@ -341,14 +406,15 @@ if __name__ == '__main__':
         #     n_annotator_list=[1],
         #     batch_size=batch_size,
         #     metric=metric,
+        #     name='plot',
         # )
 
         eval_RQ3(
             dataset=dataset,
-            instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
-            annotator_query_strategies=['random', 'round-robin'],
+            instance_query_strategies=['random'],
+            annotator_query_strategies=['random'],
             learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
-            n_annotator_list=[1, 2, 3],
+            n_annotator_list=[1],
             batch_size=batch_size,
             metric=metric,
         )

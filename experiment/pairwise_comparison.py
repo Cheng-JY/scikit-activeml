@@ -46,7 +46,7 @@ def plot_heatmap(
 
     for i in range(len(strategies)):
         for j in range(len(strategies)):
-            text = axs[0].text(j, i, f"({heat_map_numpy[i, j]:.2f})",
+            text = axs[0].text(j, i, f"({heat_map_numpy[i, j]:.2f})", fontsize='x-small',
                                ha="center", va="center", color=get_color(heat_map_numpy[i, j]))
 
     for i in range(len(strategies)):
@@ -55,10 +55,10 @@ def plot_heatmap(
 
     plt.title(dataset, loc="center")
     significant = 'is_significant' if is_p else ''
-    if question == 'RQ2':
-        path = f'{OUTPUT_PATH}/heatmap/{dataset}_{metric}_{question}_{batch_size}_{strategies[2]}_{significant}.pdf'
+    if question == 'RQ3':
+        path = f'{OUTPUT_PATH}/heatmap/{dataset}/{dataset}_{metric}_{question}_{batch_size}_{strategies[2]}_{significant}.pdf'
     else:
-        path = f'{OUTPUT_PATH}/heatmap/{dataset}_{metric}_{question}_{batch_size}_{significant}.pdf'
+        path = f'{OUTPUT_PATH}/heatmap/{dataset}/{dataset}_{metric}_{question}_{batch_size}_{significant}.pdf'
     plt.savefig(path, bbox_inches="tight")
 
 
@@ -112,7 +112,7 @@ def pairwise_comparison_RQ1(
     return heat_map_numpy, heat_map_sum
 
 
-def pairwise_comparison_RQ2(
+def pairwise_comparison_RQ3(
         dataset,
         instance_query_strategies,
         annotator_query_strategies,
@@ -154,25 +154,156 @@ def pairwise_comparison_RQ2(
 
             heat_map_numpy[idx_a_i, idx_a_j] = win_counter / sum_counter
 
-    heat_map_sum = np.sum(heat_map_numpy, axis=1).reshape(-1, 1) / (len(instance_query_strategies) - 1)
+    heat_map_sum = np.sum(heat_map_numpy, axis=1).reshape(-1, 1) / (len(annotator_query_strategies) - 1)
 
     return heat_map_numpy, heat_map_sum
 
 
-def pairwise_comparison_RQ3():
-    pass
+def pairwise_comparison_RQ2(
+        dataset,
+        instance_query_strategies,
+        annotator_query_strategies,
+        learning_strategies,
+        n_annotator_list,
+        batch_size,
+        metric,
+        is_p,
+):
+    heat_map_numpy = np.zeros(shape=(len(learning_strategies), len(learning_strategies)))
+
+    for idx_l_i, learning_strategy_i in enumerate(learning_strategies):
+        for idx_l_j, learning_strategy_j in enumerate(learning_strategies):
+            if idx_l_i == idx_l_j:
+                continue
+            win_counter = 0
+            sum_counter = 0
+            for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
+                for idx_a, annotator_query_strategy in enumerate(annotator_query_strategies):
+                    for idx_n, n_annotator_per_instance in enumerate(n_annotator_list):
+                        sum_counter += 1
+                        metric_mean_i, metric_std_i, label_i = get_metric(dataset, instance_query_strategy,
+                                                                          annotator_query_strategy, learning_strategy_i,
+                                                                          n_annotator_per_instance, batch_size, metric)
+
+                        metric_mean_j, metric_std_j, label_j = get_metric(dataset, instance_query_strategy,
+                                                                          annotator_query_strategy, learning_strategy_j,
+                                                                          n_annotator_per_instance, batch_size, metric)
+
+                        for l in range(len(metric_mean_i)):
+                            t_stat, p_value = stats.ttest_ind_from_stats(metric_mean_i[l], metric_std_i[l], 5,
+                                                                         metric_mean_j[l], metric_std_j[l], 5)
+                            if is_p:
+                                if p_value < 0.05 and metric_mean_i[l] < metric_mean_j[l]:
+                                    win_counter += 1 / len(metric_mean_i)
+                            else:
+                                if metric_mean_i[l] < metric_mean_j[l]:
+                                    win_counter += 1 / len(metric_mean_i)
+
+            heat_map_numpy[idx_l_i, idx_l_j] = win_counter / sum_counter
+
+    heat_map_sum = np.sum(heat_map_numpy, axis=1).reshape(-1, 1) / (len(learning_strategies) - 1)
+
+    return heat_map_numpy, heat_map_sum
 
 
-def pairwise_comparison_RQ2_3():
-    pass
+def pairwise_comparison_RQ2_3(
+        dataset,
+        instance_query_strategies,
+        annotator_query_strategies,
+        learning_strategies,
+        n_annotator_list,
+        batch_size,
+        metric,
+        is_p,
+):
+    combine_list = creat_intelligent_combi(annotator_query_strategies, learning_strategies)
+    heat_map_numpy = np.zeros(shape=(len(combine_list), len(combine_list)))
+
+    for idx_c_i, intelligent_combi_i in enumerate(combine_list):
+        for idx_c_j, intelligent_combi_j in enumerate(combine_list):
+            if idx_c_i == idx_c_j:
+                continue
+            win_counter = 0
+            sum_counter = 0
+            for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
+                for idx_n, n_annotator_per_instance in enumerate(n_annotator_list):
+                    sum_counter += 1
+                    metric_mean_i, metric_std_i, label_i = get_metric(dataset, instance_query_strategy,
+                                                                      intelligent_combi_i[0], intelligent_combi_i[1],
+                                                                      n_annotator_per_instance, batch_size, metric)
+
+                    metric_mean_j, metric_std_j, label_j = get_metric(dataset, instance_query_strategy,
+                                                                      intelligent_combi_j[0], intelligent_combi_j[1],
+                                                                      n_annotator_per_instance, batch_size, metric)
+                    for l in range(len(metric_mean_i)):
+                        t_stat, p_value = stats.ttest_ind_from_stats(metric_mean_i[l], metric_std_i[l], 5,
+                                                                     metric_mean_j[l], metric_std_j[l], 5)
+                        if is_p:
+                            if p_value < 0.05 and metric_mean_i[l] < metric_mean_j[l]:
+                                win_counter += 1 / len(metric_mean_i)
+                        else:
+                            if metric_mean_i[l] < metric_mean_j[l]:
+                                win_counter += 1 / len(metric_mean_i)
+
+            heat_map_numpy[idx_c_i, idx_c_j] = win_counter / sum_counter
+
+    heat_map_sum = np.sum(heat_map_numpy, axis=1).reshape(-1, 1) / (len(combine_list) - 1)
+
+    return heat_map_numpy, heat_map_sum
 
 
-def pairwise_comparison_RQ4():
-    pass
+def pairwise_comparison_RQ4(
+        dataset,
+        instance_query_strategies,
+        annotator_query_strategies,
+        learning_strategies,
+        n_annotator_list,
+        batch_size,
+        metric,
+        is_p,
+):
+    heat_map_numpy = np.zeros(shape=(len(n_annotator_list), len(n_annotator_list)))
+
+    for idx_n_i, n_annotator_per_instance_i in enumerate(n_annotator_list):
+        for idx_n_j, n_annotator_per_instance_j in enumerate(n_annotator_list):
+            if idx_n_i == idx_n_j:
+                continue
+            win_counter = 0
+            sum_counter = 0
+            for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
+                for idx_a, annotator_query_strategy in enumerate(annotator_query_strategies):
+                    for idx_l, learning_strategy in enumerate(learning_strategies):
+                        if (annotator_query_strategy in ['trace-reg', 'geo-reg-f', 'geo-reg-w'] and
+                                learning_strategy != annotator_query_strategy):
+                            continue
+                        sum_counter += 1
+                        metric_mean_i, metric_std_i, label_i = get_metric(dataset, instance_query_strategy,
+                                                                          annotator_query_strategy, learning_strategy,
+                                                                          n_annotator_per_instance_i, batch_size, metric)
+
+                        metric_mean_j, metric_std_j, label_j = get_metric(dataset, instance_query_strategy,
+                                                                          annotator_query_strategy, learning_strategy,
+                                                                          n_annotator_per_instance_j, batch_size, metric)
+
+                        for l in range(len(metric_mean_i)):
+                            t_stat, p_value = stats.ttest_ind_from_stats(metric_mean_i[l], metric_std_i[l], 5,
+                                                                         metric_mean_j[l], metric_std_j[l], 5)
+                            if is_p:
+                                if p_value < 0.05 and metric_mean_i[l] < metric_mean_j[l]:
+                                    win_counter += 1 / len(metric_mean_i)
+                            else:
+                                if metric_mean_i[l] < metric_mean_j[l]:
+                                    win_counter += 1 / len(metric_mean_i)
+
+            heat_map_numpy[idx_n_i, idx_n_j] = win_counter / sum_counter
+
+    heat_map_sum = np.sum(heat_map_numpy, axis=1).reshape(-1, 1) / (len(n_annotator_list) - 1)
+
+    return heat_map_numpy, heat_map_sum
 
 
 if __name__ == '__main__':
-    dataset = 'letter'
+    dataset_list = ['letter', 'dopanim']
     instance_query_strategies = ['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust']
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
@@ -181,46 +312,64 @@ if __name__ == '__main__':
         'letter': 156,
         'dopanim': 90,
     }
-    batch_size = batch_size_dict[dataset] * 2
+    vielfach_list = [1, 2]
     metric = 'misclassification'
-    question = 'RQ2'
-    is_p = True
+    question_list = ['RQ1', 'RQ2', 'RQ3', 'RQ4', 'RQ2_3']
+    RQ2_intelligent_strategies = ['trace-reg', 'geo-reg-f', 'geo-reg-w']
+    is_p_list = [True, False]
 
-    if question == 'RQ1':
-        heat_map_numpy, heat_map_sum = pairwise_comparison_RQ1(
-            dataset=dataset,
-            instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
-            annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
-            learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
-            n_annotator_list=n_annotator_list,
-            batch_size=batch_size,
-            metric=metric,
-            is_p=is_p
-        )
-        strategies = instance_query_strategies
-    elif question == 'RQ2':
-        intelligent_strategy = 'trace-reg'
-        heat_map_numpy, heat_map_sum = pairwise_comparison_RQ2(
-            dataset=dataset,
-            instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
-            annotator_query_strategies=['random', 'round-robin', intelligent_strategy],
-            learning_strategies=[intelligent_strategy],
-            n_annotator_list=n_annotator_list,
-            batch_size=batch_size,
-            metric=metric,
-            is_p=is_p,
-        )
-        strategies = ['random', 'round-robin', intelligent_strategy]
+    dataset_name = 'dopanim'
+    batch_size = batch_size_dict[dataset_name]
+    intelligent_strategy = 'trace-reg'
+    heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ4(
+        dataset=dataset_name,
+        instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
+        annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+        learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+        n_annotator_list=n_annotator_list,
+        batch_size=batch_size,
+        metric=metric,
+        is_p=True
+    )
 
-    print(heat_map_numpy)
+    batch_size = batch_size_dict[dataset_name] * 2
+    heat_map_numpy_2, heat_map_sum_2 = pairwise_comparison_RQ4(
+        dataset=dataset_name,
+        instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
+        annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+        learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+        n_annotator_list=n_annotator_list,
+        batch_size=batch_size,
+        metric=metric,
+        is_p=True
+    )
+
+    strategies = n_annotator_list
+
+    heat_map_numpy = (heat_map_numpy_2 + heat_map_numpy_1) / 2
+    heat_map_sum = (heat_map_sum_2 + heat_map_sum_1) / 2
 
     plot_heatmap(
-        dataset=dataset,
+        dataset=dataset_name,
         heat_map_numpy=heat_map_numpy,
         heat_map_sum=heat_map_sum,
         strategies=strategies,
-        batch_size=batch_size,
+        batch_size=10,
         metric=metric,
-        question=question,
-        is_p=is_p
+        question='RQ4',
+        is_p=True
     )
+
+    # for dataset_name in dataset_list:
+    #     for vielfach in vielfach_list:
+    #         batch_size = batch_size_dict[dataset_name] * vielfach
+    #         for question in question_list:
+    #             for is_p in is_p_list:
+    #                 for intelligent in RQ2_intelligent_strategies:
+    #                     plot(
+    #                         dataset=dataset_name,
+    #                         batch_size=batch_size,
+    #                         question=question,
+    #                         RQ2_intelligent_strategy=intelligent,
+    #                         is_p=is_p
+    #                     )
