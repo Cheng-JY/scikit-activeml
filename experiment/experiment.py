@@ -63,7 +63,7 @@ def main(cfg):
             'dataset_name': 'agnews',
             'instance_query_strategy': "random",  # [random, uncertainty, coreset, gsx]
             'annotator_query_strategy': "random",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
-            'learning_strategy': "majority-vote",
+            'learning_strategy': "geo-reg-f",
             # [majority_vote, trace-reg, geo-reg-f, geo-reg-w] [r-m, rr-m, r-t, t-t, gf-gf, gw-gw]
             'batch_size': 72 * n_classes,  # 6*n_classes,
             'n_annotators_per_sample': 1,  # 1, 2, 3
@@ -217,7 +217,19 @@ def main(cfg):
                     iterator_train__shuffle=True,
                     **hyper_parameter,
                 )
-                net.fit(X_train, y_partial)
+                if data_name == 'agnews':
+                    y_agg = majority_vote(y_partial, classes=classes, missing_label=MISSING_LABEL,
+                                          random_state=experiment_params['seed'] + c)
+                    is_lbld_X = is_labeled(y_agg, missing_label=MISSING_LABEL)
+                    lbld_indices = np.arange(n_samples)
+                    lbld_indices = lbld_indices[is_lbld_X]
+                    X_t = X_train[lbld_indices]
+                    y_t = y_train[lbld_indices]
+                else:
+                    X_t = X_train
+                    y_t = y_partial
+
+                net.fit(X_t, y_t)
 
             accuracy = net.score(X_test, y_test_true)
             metric_dict['misclassification'].append(1 - accuracy)
