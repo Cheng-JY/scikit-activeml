@@ -71,7 +71,7 @@ def eval_RQ1(
         plt.plot(np.arange(init_batch_size, len(mean_i) * batch_size + init_batch_size, batch_size),
                  mean_i, label=f"({np.mean(mean_i):.4f}) {instance_query_strategy}", alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(0.5, -0.35), fontsize=10, loc='lower center', ncol=3)
+    plt.legend(bbox_to_anchor=(0.5, -0.35), fontsize=12, loc='lower center', ncol=3)
     plt.tight_layout()
     plt.xlabel('# Annotations queried')
     plt.ylabel(f"{metric}")
@@ -116,7 +116,7 @@ def eval_RQ2(
         plt.plot(np.arange(init_batch_size, len(mean_a) * batch_size + init_batch_size, batch_size),
                      mean_a, label=f"({np.mean(mean_a):.4f}) {learning_strategy}", alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(0.5, -0.35), fontsize=10, loc='lower center', ncol=2)
+    plt.legend(bbox_to_anchor=(0.5, -0.35), fontsize=12, loc='lower center', ncol=2)
     plt.tight_layout()
     plt.xlabel('# Annotation queried')
     plt.ylabel(f"{metric}")
@@ -153,7 +153,7 @@ def eval_RQ3(
                              label=f"({np.mean(metric_mean):.4f}) {annotator_query_strategy} - {learning_strategy}",
                              alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(0.5, -0.35), fontsize=6, loc='lower center', ncol=3)
+    plt.legend(bbox_to_anchor=(0.5, -0.35), fontsize=12, loc='lower center', ncol=3)
     plt.tight_layout()
     plt.xlabel('# Annotation queried')
     plt.ylabel(f"{metric}")
@@ -198,7 +198,7 @@ def eval_RQ4(
                      mean_a, std_a / np.sqrt(5),
                      label=f"({np.mean(mean_a):.4f}) {n_annotator_per_instance}", alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(0.5, -0.35), fontsize=6, loc='lower center', ncol=3)
+    plt.legend(bbox_to_anchor=(0.5, -0.3), fontsize=12, loc='lower center', ncol=3)
     plt.tight_layout()
     plt.xlabel('# Annotations queried')
     plt.ylabel(f"{metric}")
