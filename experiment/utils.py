@@ -93,8 +93,8 @@ def load_dataset_dopanim(data_dir):
 
 
 def load_dataset_agnews(data_dir):
-    X_train = np.load(f'{data_dir}/agnews/ag_news_sim_x_train.npy')
-    X_test = np.load(f'{data_dir}/agnews/ag_news_sim_x_test.npy')
+    X_train = np.load(f'{data_dir}/agnews/ag_news_sim_x_train_new.npy')
+    X_test = np.load(f'{data_dir}/agnews/ag_news_sim_x_test_new.npy')
     y_train = np.load(f'{data_dir}/agnews/ag_news_sim_y_train.npy')
     y_train_true = np.load(f'{data_dir}/agnews/ag_news_sim_y_true_train.npy')
     y_test_true = np.load(f'{data_dir}/agnews/ag_news_sim_y_true_test.npy')
