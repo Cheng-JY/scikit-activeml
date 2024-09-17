@@ -217,8 +217,8 @@ if __name__ == '__main__':
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
 
-    dataset = 'letter'
-    question = 'RQ4'
+    dataset = 'agnews'
+    question = 'RQ1'
     metric = 'misclassification'
     batch_size_dict = {
         'letter': 156,
@@ -230,8 +230,8 @@ if __name__ == '__main__':
         eval_RQ1(
             dataset=dataset,
             instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
-            annotator_query_strategies=['random'],
-            learning_strategies=['majority-vote'],
+            annotator_query_strategies=['trace-reg'],
+            learning_strategies=['trace-reg'],
             n_annotator_list=[1],
             batch_size=batch_size,
             metric=metric,
@@ -239,8 +239,8 @@ if __name__ == '__main__':
     elif question == 'RQ2':
         eval_RQ2(
             dataset=dataset,
-            instance_query_strategies=['random'],
-            annotator_query_strategies=['random'],
+            instance_query_strategies=['typiclust'],
+            annotator_query_strategies=['round-robin'],
             learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
             n_annotator_list=[1],
             batch_size=batch_size,
@@ -249,7 +249,7 @@ if __name__ == '__main__':
     elif question == 'RQ3':
         eval_RQ3(
             dataset=dataset,
-            instance_query_strategies=['random'],
+            instance_query_strategies=['uncertainty'],
             annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
             learning_strategies=['trace-reg', 'geo-reg-f', 'geo-reg-w'],
             n_annotator_list=[1],
