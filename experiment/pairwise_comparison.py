@@ -1,8 +1,5 @@
-import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
-import pandas as pd
-import matplotlib.colors as mcolors
 import numpy as np
 from plot_utils import *
 
@@ -36,7 +33,7 @@ def plot_heatmap(
 
     axs[0].set_xticks(np.arange(len(strategies)), labels=strategies)
     plt.setp(axs[0].get_xticklabels(), rotation=45, ha="right",
-             rotation_mode="anchor")
+             rotation_mode="anchor", fontsize=12)
     axs[0].set_yticks(np.arange(len(strategies)), labels=strategies)
 
     axs[1].set_yticks(np.arange(len(strategies)), labels=strategies)
@@ -46,11 +43,11 @@ def plot_heatmap(
 
     for i in range(len(strategies)):
         for j in range(len(strategies)):
-            text = axs[0].text(j, i, f"({heat_map_numpy[i, j]:.2f})", fontsize='x-small',
+            text = axs[0].text(j, i, f"({heat_map_numpy[i, j]:.2f})", fontsize=12,
                                ha="center", va="center", color=get_color(heat_map_numpy[i, j]))
 
     for i in range(len(strategies)):
-        text1 = axs[1].text(0, i, f"({heat_map_sum[i, 0]:.2f})",
+        text1 = axs[1].text(0, i, f"({heat_map_sum[i, 0]:.2f})", fontsize=12,
                             ha="center", va="center", color=get_color(heat_map_sum[i, 0]))
 
     plt.title(dataset, loc="center")
@@ -146,7 +143,7 @@ def pairwise_comparison_RQ3(
                             t_stat, p_value = stats.ttest_ind_from_stats(metric_mean_i[l], metric_std_i[l], 5,
                                                                          metric_mean_j[l], metric_std_j[l], 5)
                             if is_p:
-                                if p_value < 0.05 and metric_mean_i[l] < metric_mean_j[l]:
+                                if t_stat < -2.776:
                                     win_counter += 1 / len(metric_mean_i)
                             else:
                                 if metric_mean_i[l] < metric_mean_j[l]:
@@ -193,7 +190,7 @@ def pairwise_comparison_RQ2(
                             t_stat, p_value = stats.ttest_ind_from_stats(metric_mean_i[l], metric_std_i[l], 5,
                                                                          metric_mean_j[l], metric_std_j[l], 5)
                             if is_p:
-                                if p_value < 0.05 and metric_mean_i[l] < metric_mean_j[l]:
+                                if t_stat < -2.776:
                                     win_counter += 1 / len(metric_mean_i)
                             else:
                                 if metric_mean_i[l] < metric_mean_j[l]:
@@ -289,7 +286,7 @@ def pairwise_comparison_RQ4(
                             t_stat, p_value = stats.ttest_ind_from_stats(metric_mean_i[l], metric_std_i[l], 5,
                                                                          metric_mean_j[l], metric_std_j[l], 5)
                             if is_p:
-                                if p_value < 0.05 and metric_mean_i[l] < metric_mean_j[l]:
+                                if t_stat < -2.776:
                                     win_counter += 1 / len(metric_mean_i)
                             else:
                                 if metric_mean_i[l] < metric_mean_j[l]:
@@ -303,7 +300,7 @@ def pairwise_comparison_RQ4(
 
 
 if __name__ == '__main__':
-    dataset_list = ['letter', 'dopanim']
+    dataset_list = ['agnews']
     instance_query_strategies = ['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust']
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
@@ -311,17 +308,18 @@ if __name__ == '__main__':
     batch_size_dict = {
         'letter': 156,
         'dopanim': 90,
+        'agnews': 24,
     }
     vielfach_list = [1, 2]
-    metric = 'misclassification'
     question_list = ['RQ1', 'RQ2', 'RQ3', 'RQ4', 'RQ2_3']
     RQ2_intelligent_strategies = ['trace-reg', 'geo-reg-f', 'geo-reg-w']
     is_p_list = [True, False]
 
-    dataset_name = 'dopanim'
+    dataset_name = 'agnews'
+    metric = 'misclassification'
     batch_size = batch_size_dict[dataset_name]
     intelligent_strategy = 'trace-reg'
-    heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ4(
+    heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ1(
         dataset=dataset_name,
         instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
         annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
@@ -333,7 +331,7 @@ if __name__ == '__main__':
     )
 
     batch_size = batch_size_dict[dataset_name] * 2
-    heat_map_numpy_2, heat_map_sum_2 = pairwise_comparison_RQ4(
+    heat_map_numpy_2, heat_map_sum_2 = pairwise_comparison_RQ1(
         dataset=dataset_name,
         instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
         annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
@@ -344,7 +342,7 @@ if __name__ == '__main__':
         is_p=True
     )
 
-    strategies = n_annotator_list
+    strategies = instance_query_strategies
 
     heat_map_numpy = (heat_map_numpy_2 + heat_map_numpy_1) / 2
     heat_map_sum = (heat_map_sum_2 + heat_map_sum_1) / 2
@@ -356,7 +354,7 @@ if __name__ == '__main__':
         strategies=strategies,
         batch_size=10,
         metric=metric,
-        question='RQ4',
+        question='RQ1',
         is_p=True
     )
 
@@ -373,3 +371,49 @@ if __name__ == '__main__':
     #                         RQ2_intelligent_strategy=intelligent,
     #                         is_p=is_p
     #                     )
+
+    # heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ1(
+    #     dataset=dataset_name,
+    #     instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
+    #     annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+    #     learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+    #     n_annotator_list=n_annotator_list,
+    #     batch_size=batch_size,
+    #     metric=metric,
+    #     is_p=True
+    # )
+
+    # heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ2(
+    #     dataset=dataset_name,
+    #     instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
+    #     annotator_query_strategies=['random', 'round-robin'],
+    #     learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+    #     n_annotator_list=n_annotator_list,
+    #     batch_size=batch_size,
+    #     metric=metric,
+    #     is_p=True
+    # )
+
+    # heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ3(
+    #     dataset=dataset_name,
+    #     instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
+    #     annotator_query_strategies=['random', 'round-robin', intelligent_strategy],
+    #     learning_strategies=[intelligent_strategy],
+    #     n_annotator_list=n_annotator_list,
+    #     batch_size=batch_size,
+    #     metric=metric,
+    #     is_p=True
+    # )
+
+    # heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ4(
+    #     dataset=dataset_name,
+    #     instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
+    #     annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+    #     learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+    #     n_annotator_list=n_annotator_list,
+    #     batch_size=batch_size,
+    #     metric=metric,
+    #     is_p=True
+    # )
+
+
