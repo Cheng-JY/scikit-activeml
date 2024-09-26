@@ -35,7 +35,7 @@ def main(cfg):
 
     # load dataset
     data_dir = cfg['dataset_file_path'][running_device]
-    data_name = cfg['dataset'] if running_device == 'server' else 'agnews'
+    data_name = cfg['dataset'] if running_device == 'server' else 'dopanim'
     X_train, X_test, y_train, y_test, y_train_true, y_test_true = (
         load_dataset(name=data_name, data_dir=data_dir)
     )
@@ -60,14 +60,14 @@ def main(cfg):
         master_random_state = np.random.RandomState(experiment_params['seed'])
     else:
         experiment_params = {
-            'dataset_name': 'agnews',
+            'dataset_name': 'dopanim',
             'instance_query_strategy': "random",  # [random, uncertainty, coreset, gsx]
             'annotator_query_strategy': "random",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
             'learning_strategy': "majority-vote",
             # [majority_vote, trace-reg, geo-reg-f, geo-reg-w] [r-m, rr-m, r-t, t-t, gf-gf, gw-gw]
             'batch_size': 12 * n_classes,  # 6*n_classes,
             'n_annotators_per_sample': 1,  # 1, 2, 3
-            'n_cycles': 25,  # datensatz abhängig ausgelearnt # convergiert
+            'n_cycles': 40,  # datensatz abhängig ausgelearnt # convergiert
             'seed': 0,
         }
         master_random_state = np.random.RandomState(experiment_params['seed'])
@@ -238,6 +238,7 @@ def main(cfg):
             print(c, accuracy)
             is_ulbld = is_unlabeled(y_partial, missing_label=MISSING_LABEL)
 
+        print(is_ulbld.all(axis=-1).sum())
         plt.plot(metric_dict['misclassification'])
         plt.show()
         df = pd.DataFrame.from_dict(data=metric_dict)

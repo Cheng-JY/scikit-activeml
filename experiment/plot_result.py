@@ -219,12 +219,12 @@ if __name__ == '__main__':
         metrics.append(f"Number_of_annotations_{i}")
         metrics.append(f"Number_of_correct_annotation_{i}")
 
-    instance_query_strategies = ['random', 'uncertainty', 'coreset']
+    instance_query_strategies = ['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
 
-    dataset = 'letter'
-    question = 'RQ4'
+    dataset = 'agnews'
+    question = 'RQ1'
     metric = 'misclassification'
     batch_size_dict = {
         'letter': 156,
@@ -238,7 +238,7 @@ if __name__ == '__main__':
             dataset=dataset,
             instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
             annotator_query_strategies=['random'],
-            learning_strategies=['majority-vote'],
+            learning_strategies=['geo-reg-f'],
             n_annotator_list=[1],
             batch_size=batch_size,
             metric=metric,
