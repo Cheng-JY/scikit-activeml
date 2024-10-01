@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from plot_utils import *
 
 linestyles = ['solid', 'dotted', 'dashed', 'dashdot']
@@ -44,7 +43,8 @@ def eval_RQ1(
         batch_size,
         metric,
 ):
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(11, 5))
+    plt.rcParams['font.size'] = 15
     for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
         mean_instance_query = []
         std_instance_query = []
@@ -72,7 +72,7 @@ def eval_RQ1(
         plt.plot(np.arange(init_batch_size, len(mean_i) * batch_size + init_batch_size, batch_size),
                  mean_i, label=f"({np.mean(mean_i):.4f}) {instance_query_strategy}", alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(0.5, -0.25), fontsize=12, loc='lower center', ncol=3)
+    plt.legend(bbox_to_anchor=(0.5, -0.5), loc='lower center', ncol=3)
     plt.tight_layout()
     plt.xlabel('# Annotations queried')
     metric_name = 'Erroneous Annotation Rate' if metric == 'error_annotation_rate' else 'Misclassification Rate'
@@ -91,7 +91,8 @@ def eval_RQ2(
         batch_size,
         metric,
 ):
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(11, 5))
+    plt.rcParams['font.size'] = 15
     for idx_l, learning_strategy in enumerate(learning_strategies):
         mean_learning_strategy = []
         std_learning_strategy = []
@@ -119,7 +120,7 @@ def eval_RQ2(
         plt.plot(np.arange(init_batch_size, len(mean_a) * batch_size + init_batch_size, batch_size),
                      mean_a, label=f"({np.mean(mean_a):.4f}) {learning_strategy}", alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(0.5, -0.25), fontsize=12, loc='lower center', ncol=2)
+    plt.legend(bbox_to_anchor=(0.5, -0.5), loc='lower center', ncol=2)
     plt.tight_layout()
     plt.xlabel('# Annotation queried')
     metric_name = 'Erroneous Annotation Rate' if metric == 'error_annotation_rate' else 'Misclassification Rate'
@@ -138,7 +139,8 @@ def eval_RQ3(
         batch_size,
         metric,
 ):
-    plt.figure(figsize=(11, 6))
+    plt.figure(figsize=(13, 5))
+    plt.rcParams['font.size'] = 14
     for idx_l, learning_strategy in enumerate(learning_strategies):
         for idx_a, annotator_query_strategy in enumerate(annotator_query_strategies):
             for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
@@ -153,11 +155,13 @@ def eval_RQ3(
 
                     idx_linestyle = idx_linestyle_dict[annotator_query_strategy]
 
+                    if annotator_query_strategy in ['trace-reg', 'geo-reg-f', 'geo-reg-w']:
+                        annotator_query_strategy = 'intelligent'
                     plt.plot(np.arange(batch_size, (len(metric_mean) + 1) * batch_size, batch_size),
                              metric_mean, color=colors[idx_l], linestyle=linestyles[idx_linestyle],
-                             label=f"({np.mean(metric_mean):.4f}) {annotator_query_strategy} - {learning_strategy}",
+                             label=f"({np.mean(metric_mean):.4f}) {learning_strategy} - {annotator_query_strategy}",
                              alpha=0.3)
-    plt.legend(bbox_to_anchor=(0.5, -0.35), fontsize=12, loc='lower center', ncol=3)
+    plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=3)
     plt.tight_layout()
     plt.xlabel('# Annotation queried')
     metric_name = 'Erroneous Annotation Rate' if metric == 'error_annotation_rate' else 'Misclassification Rate'
@@ -176,6 +180,8 @@ def eval_RQ4(
         batch_size,
         metric,
 ):
+    plt.figure(figsize=(11, 5))
+    plt.rcParams['font.size'] = 15
     for idx_n, n_annotator_per_instance in enumerate(n_annotator_list):
         mean_n_annotator = []
         std_n_annotator = []
@@ -201,9 +207,9 @@ def eval_RQ4(
         mean_a, std_a = get_mean_std(mean_n_annotator, std_n_annotator)
         init_batch_size = get_init_batch_size(dataset, batch_size)
         plt.plot(np.arange(init_batch_size, len(mean_a) * batch_size + init_batch_size, batch_size),
-                 mean_a, label=f"({np.mean(mean_a):.4f}) {n_annotator_per_instance}", alpha=0.3)
+                 mean_a, label=f"({np.mean(mean_a):.4f}) # Annotations per Instance: {n_annotator_per_instance}", alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(0.5, -0.3), fontsize=12, loc='lower center', ncol=3)
+    plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=2)
     plt.tight_layout()
     plt.xlabel('# Annotations queried')
     metric_name = 'Erroneous Annotation Rate' if metric == 'error_annotation_rate' else 'Misclassification Rate'
@@ -224,7 +230,7 @@ if __name__ == '__main__':
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
 
     dataset = 'agnews'
-    question = 'RQ1'
+    question = 'RQ4'
     metric = 'misclassification'
     batch_size_dict = {
         'letter': 156,
@@ -266,9 +272,9 @@ if __name__ == '__main__':
     elif question == 'RQ4':
         eval_RQ4(
             dataset=dataset,
-            instance_query_strategies=['uncertainty'],
-            annotator_query_strategies=['trace-reg'],
-            learning_strategies=['trace-reg'],
+            instance_query_strategies=['typiclust'],
+            annotator_query_strategies=['geo-reg-f'],
+            learning_strategies=['geo-reg-f'],
             n_annotator_list=[1, 2, 3],
             batch_size=batch_size,
             metric=metric,

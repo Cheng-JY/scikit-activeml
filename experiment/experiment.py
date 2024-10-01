@@ -62,8 +62,8 @@ def main(cfg):
         experiment_params = {
             'dataset_name': 'dopanim',
             'instance_query_strategy': "random",  # [random, uncertainty, coreset, gsx]
-            'annotator_query_strategy': "random",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
-            'learning_strategy': "majority-vote",
+            'annotator_query_strategy': "trace-reg",  # [random, round-robin, trace-reg, geo-reg-f, geo-reg-w]
+            'learning_strategy': "trace-reg",
             # [majority_vote, trace-reg, geo-reg-f, geo-reg-w] [r-m, rr-m, r-t, t-t, gf-gf, gw-gw]
             'batch_size': 12 * n_classes,  # 6*n_classes,
             'n_annotators_per_sample': 1,  # 1, 2, 3

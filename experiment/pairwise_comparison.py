@@ -21,8 +21,10 @@ def plot_heatmap(
         batch_size,
         metric,
         question,
-        is_p
+        is_p,
+        intelligent_strategy='none',
 ):
+    plt.rcParams['font.size'] = 15
     fig, axs = plt.subplots(1, 2, sharey=True, gridspec_kw={'width_ratios': [6, 1]})
     a1 = axs[0].imshow(heat_map_numpy, cmap="YlGnBu",
                        vmin=0.0, vmax=1.0, aspect='auto',
@@ -33,27 +35,27 @@ def plot_heatmap(
 
     axs[0].set_xticks(np.arange(len(strategies)), labels=strategies)
     plt.setp(axs[0].get_xticklabels(), rotation=45, ha="right",
-             rotation_mode="anchor", fontsize=12)
+             rotation_mode="anchor")
     axs[0].set_yticks(np.arange(len(strategies)), labels=strategies)
 
     axs[1].set_yticks(np.arange(len(strategies)), labels=strategies)
     axs[1].set_xticks(np.arange(1), ['average'])
 
-    plt.colorbar(a2)
+    plt.colorbar(a2, fraction=0.25)
 
     for i in range(len(strategies)):
         for j in range(len(strategies)):
-            text = axs[0].text(j, i, f"({heat_map_numpy[i, j]:.2f})", fontsize=12,
+            text = axs[0].text(j, i, f"{heat_map_numpy[i, j]:.2f}",
                                ha="center", va="center", color=get_color(heat_map_numpy[i, j]))
 
     for i in range(len(strategies)):
-        text1 = axs[1].text(0, i, f"({heat_map_sum[i, 0]:.2f})", fontsize=12,
+        text1 = axs[1].text(0, i, f"{heat_map_sum[i, 0]:.2f}",
                             ha="center", va="center", color=get_color(heat_map_sum[i, 0]))
 
     plt.title(dataset, loc="center")
     significant = 'is_significant' if is_p else ''
     if question == 'RQ3':
-        path = f'{OUTPUT_PATH}/heatmap/{dataset}/{dataset}_{metric}_{question}_{batch_size}_{strategies[2]}_{significant}.pdf'
+        path = f'{OUTPUT_PATH}/heatmap/{dataset}/{dataset}_{metric}_{question}_{batch_size}_{intelligent_strategy}_{significant}.pdf'
     else:
         path = f'{OUTPUT_PATH}/heatmap/{dataset}/{dataset}_{metric}_{question}_{batch_size}_{significant}.pdf'
     plt.savefig(path, bbox_inches="tight")
@@ -315,11 +317,11 @@ if __name__ == '__main__':
     RQ2_intelligent_strategies = ['trace-reg', 'geo-reg-f', 'geo-reg-w']
     is_p_list = [True, False]
 
-    dataset_name = 'agnews'
+    dataset_name = 'dopanim'
     metric = 'misclassification'
     batch_size = batch_size_dict[dataset_name]
-    intelligent_strategy = 'trace-reg'
-    heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ1(
+    intelligent_strategy = 'geo-reg-w'
+    heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ4(
         dataset=dataset_name,
         instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
         annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
@@ -331,7 +333,7 @@ if __name__ == '__main__':
     )
 
     batch_size = batch_size_dict[dataset_name] * 2
-    heat_map_numpy_2, heat_map_sum_2 = pairwise_comparison_RQ1(
+    heat_map_numpy_2, heat_map_sum_2 = pairwise_comparison_RQ4(
         dataset=dataset_name,
         instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
         annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
@@ -342,7 +344,7 @@ if __name__ == '__main__':
         is_p=True
     )
 
-    strategies = instance_query_strategies
+    strategies = [f'W = {i}' for i in range(1, 4)]
 
     heat_map_numpy = (heat_map_numpy_2 + heat_map_numpy_1) / 2
     heat_map_sum = (heat_map_sum_2 + heat_map_sum_1) / 2
@@ -354,23 +356,10 @@ if __name__ == '__main__':
         strategies=strategies,
         batch_size=10,
         metric=metric,
-        question='RQ1',
-        is_p=True
+        question='RQ4',
+        is_p=True,
+        intelligent_strategy=intelligent_strategy
     )
-
-    # for dataset_name in dataset_list:
-    #     for vielfach in vielfach_list:
-    #         batch_size = batch_size_dict[dataset_name] * vielfach
-    #         for question in question_list:
-    #             for is_p in is_p_list:
-    #                 for intelligent in RQ2_intelligent_strategies:
-    #                     plot(
-    #                         dataset=dataset_name,
-    #                         batch_size=batch_size,
-    #                         question=question,
-    #                         RQ2_intelligent_strategy=intelligent,
-    #                         is_p=is_p
-    #                     )
 
     # heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ1(
     #     dataset=dataset_name,

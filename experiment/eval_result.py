@@ -5,6 +5,13 @@ import csv
 OUTPUT_PATH = '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/output_image/'
 
 
+batch_size_dict = {
+        'letter': 156,
+        'dopanim': 90,
+        'agnews': 24,
+    }
+
+
 def get_mean_std(mean_list, std_list):
     mean_a = mean_list.mean()
     var_annotator_query = std_list * std_list
@@ -12,11 +19,6 @@ def get_mean_std(mean_list, std_list):
     std_a = np.sqrt(var_a)
     return mean_a, std_a
 
-batch_size_dict = {
-        'letter': 156,
-        'dopanim': 90,
-        'agnews': 24,
-    }
 
 def eval_result(
         datasets,
@@ -55,8 +57,11 @@ def eval_result(
                             std_a = np.round(std_a * 100, 1)
                             means.append(mean_a)
                             stds.append(std_a)
-
-                        results.append([instance_query_strategy, annotator_query_strategy, learning_strategy, n_annotator_per_instance, f'{means[0]} \pm {stds[0]}', f'{means[0]} \pm {stds[0]}', f'{means[0]} \pm {stds[0]} \\'])
+                        if idx_n == 0:
+                            results.append(['\hline'])
+                            results.append(['\multirow{3}{*}{'+ instance_query_strategy + '} ', '\multirow{3}{*}{'+ annotator_query_strategy + '} ', '\multirow{3}{*}{'+ learning_strategy + '} ', n_annotator_per_instance, f'{means[0]} $\pm$ {stds[0]}', f'{means[1]} $\pm$ {stds[1]}', f'{means[2]} $\pm$ {stds[2]} end'])
+                        else:
+                            results.append(['x', 'x', 'x', n_annotator_per_instance, f'{means[0]} $\pm$ {stds[0]}', f'{means[1]} $\pm$ {stds[1]}', f'{means[2]} $\pm$ {stds[2]} end'])
 
     with open(f'{OUTPUT_PATH}/result_3.csv', 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
