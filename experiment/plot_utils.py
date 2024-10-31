@@ -1,4 +1,28 @@
 import pandas as pd
+import numpy as np
+
+linestyles = ['solid', 'dotted', 'dashed', 'dashdot']
+colors = ['red', 'blue', 'green', 'orange']
+
+n_annotators_dict = {
+    'letter': 10,
+    'dopanim': 20,
+    'agnews': 20,
+}
+
+idx_linestyle_dict = {
+    'random': 0,
+    'round-robin': 1,
+    'trace-reg': 2,
+    'geo-reg-f': 2,
+    'geo-reg-w': 2,
+}
+
+n_classes_dict = {
+    'letter': 26,
+    'dopanim': 15,
+    'agnews': 4,
+}
 
 
 def get_metric(
@@ -37,3 +61,23 @@ def creat_intelligent_combi(
             combi = (annotator_query_strategy, learning_strategy)
             combine_list.append(combi)
     return combine_list
+
+
+def get_mean_std(mean_list, std_list):
+    mean_a = mean_list.mean(axis=0)
+    var_annotator_query = std_list * std_list
+    var_a = var_annotator_query.mean(axis=0)
+    std_a = np.sqrt(var_a)
+    return mean_a, std_a
+
+
+def get_init_batch_size(dataset, batch_size):
+    init_batch_size = n_annotators_dict[dataset] * batch_size
+    return init_batch_size
+
+
+def get_color(value):
+    if value > 0.5:
+        return "white"
+    else:
+        return "black"

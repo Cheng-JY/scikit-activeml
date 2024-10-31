@@ -6,13 +6,6 @@ from plot_utils import *
 OUTPUT_PATH = '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/output_image'
 
 
-def get_color(value):
-    if value > 0.5:
-        return "white"
-    else:
-        return "black"
-
-
 def plot_heatmap(
         dataset,
         heat_map_numpy,
@@ -82,9 +75,8 @@ def pairwise_comparison_RQ1(
             for idx_a, annotator_query_strategy in enumerate(annotator_query_strategies):
                 for idx_l, learning_strategy in enumerate(learning_strategies):
                     for idx_n, n_annotator_per_instance in enumerate(n_annotator_list):
-                        if (annotator_query_strategy in ['trace-reg', 'geo-reg-f', 'geo-reg-w'] and
-                                learning_strategy != annotator_query_strategy):
-                            continue
+                        if learning_strategy in ['trace-reg', 'geo-reg-f', 'geo-reg-w'] and annotator_query_strategy == 'intelligent':
+                            annotator_query_strategy = learning_strategy
                         sum_counter += 1
                         metric_mean_i, metric_std_i, label_i = get_metric(dataset, instance_query_strategy_i,
                                                                           annotator_query_strategy, learning_strategy,
@@ -131,6 +123,11 @@ def pairwise_comparison_RQ3(
             sum_counter = 0
             for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
                 for idx_l, learning_strategy in enumerate(learning_strategies):
+                    if learning_strategy != 'majority-vote':
+                        if annotator_query_strategy_i == 'intelligent':
+                            annotator_query_strategy_i = learning_strategy
+                        if annotator_query_strategy_j == 'intelligent':
+                            annotator_query_strategy_j = learning_strategy
                     for idx_n, n_annotator_per_instance in enumerate(n_annotator_list):
                         sum_counter += 1
                         metric_mean_i, metric_std_i, label_i = get_metric(dataset, instance_query_strategy,
@@ -272,9 +269,9 @@ def pairwise_comparison_RQ4(
             for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
                 for idx_a, annotator_query_strategy in enumerate(annotator_query_strategies):
                     for idx_l, learning_strategy in enumerate(learning_strategies):
-                        if (annotator_query_strategy in ['trace-reg', 'geo-reg-f', 'geo-reg-w'] and
-                                learning_strategy != annotator_query_strategy):
-                            continue
+                        if learning_strategy != 'majority-vote':
+                            if annotator_query_strategy == 'intelligent':
+                                annotator_query_strategy = learning_strategy
                         sum_counter += 1
                         metric_mean_i, metric_std_i, label_i = get_metric(dataset, instance_query_strategy,
                                                                           annotator_query_strategy, learning_strategy,
@@ -317,15 +314,15 @@ if __name__ == '__main__':
     RQ2_intelligent_strategies = ['trace-reg', 'geo-reg-f', 'geo-reg-w']
     is_p_list = [True, False]
 
-    dataset_name = 'dopanim'
+    dataset_name = 'agnews'
     metric = 'misclassification'
     batch_size = batch_size_dict[dataset_name]
-    intelligent_strategy = 'geo-reg-w'
-    heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ4(
+    intelligent_strategy = 'geo-reg-f'
+    heat_map_numpy_1, heat_map_sum_1 = pairwise_comparison_RQ1(
         dataset=dataset_name,
         instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
-        annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
-        learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+        annotator_query_strategies=['random', 'round-robin', intelligent_strategy],
+        learning_strategies=[intelligent_strategy],
         n_annotator_list=n_annotator_list,
         batch_size=batch_size,
         metric=metric,
@@ -333,18 +330,18 @@ if __name__ == '__main__':
     )
 
     batch_size = batch_size_dict[dataset_name] * 2
-    heat_map_numpy_2, heat_map_sum_2 = pairwise_comparison_RQ4(
+    heat_map_numpy_2, heat_map_sum_2 = pairwise_comparison_RQ1(
         dataset=dataset_name,
         instance_query_strategies=['random', 'gsx', 'uncertainty', 'coreset', 'clue', 'typiclust'],
-        annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
-        learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
+        annotator_query_strategies=['random', 'round-robin', intelligent_strategy],
+        learning_strategies=[intelligent_strategy],
         n_annotator_list=n_annotator_list,
         batch_size=batch_size,
         metric=metric,
         is_p=True
     )
 
-    strategies = [f'W = {i}' for i in range(1, 4)]
+    strategies = instance_query_strategies
 
     heat_map_numpy = (heat_map_numpy_2 + heat_map_numpy_1) / 2
     heat_map_sum = (heat_map_sum_2 + heat_map_sum_1) / 2
@@ -356,7 +353,7 @@ if __name__ == '__main__':
         strategies=strategies,
         batch_size=10,
         metric=metric,
-        question='RQ4',
+        question=f'RQ1_{intelligent_strategy}',
         is_p=True,
         intelligent_strategy=intelligent_strategy
     )

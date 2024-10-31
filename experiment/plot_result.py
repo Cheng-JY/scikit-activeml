@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 from plot_utils import *
 
 linestyles = ['solid', 'dotted', 'dashed', 'dashdot']
@@ -10,7 +9,7 @@ n_annotators_dict = {
     'agnews': 20,
 }
 
-OUTPUT_PATH = '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/output_image/'
+OUTPUT_PATH = '/Users/chengjiaying/PycharmProjects/scikit-activeml/experiment/output_image'
 
 idx_linestyle_dict = {
     'random': 0,
@@ -19,19 +18,6 @@ idx_linestyle_dict = {
     'geo-reg-f': 2,
     'geo-reg-w': 2,
 }
-
-
-def get_mean_std(mean_list, std_list):
-    mean_a = mean_list.mean(axis=0)
-    var_annotator_query = std_list * std_list
-    var_a = var_annotator_query.mean(axis=0)
-    std_a = np.sqrt(var_a)
-    return mean_a, std_a
-
-
-def get_init_batch_size(dataset, batch_size):
-    init_batch_size = n_annotators_dict[dataset] * batch_size
-    return init_batch_size
 
 
 def eval_RQ1(
@@ -43,8 +29,8 @@ def eval_RQ1(
         batch_size,
         metric,
 ):
-    plt.figure(figsize=(11, 5))
-    plt.rcParams['font.size'] = 15
+    plt.figure(figsize=(7, 6))
+    plt.rcParams['font.size'] = 12
     for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
         mean_instance_query = []
         std_instance_query = []
@@ -72,13 +58,13 @@ def eval_RQ1(
         plt.plot(np.arange(init_batch_size, len(mean_i) * batch_size + init_batch_size, batch_size),
                  mean_i, label=f"({np.mean(mean_i):.4f}) {instance_query_strategy}", alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(0.5, -0.5), loc='lower center', ncol=3)
+    plt.legend(bbox_to_anchor=(0.5, -0.25), loc='lower center', ncol=3)
     plt.tight_layout()
     plt.xlabel('# Annotations queried')
     metric_name = 'Erroneous Annotation Rate' if metric == 'error_annotation_rate' else 'Misclassification Rate'
     plt.ylabel(f"{metric_name}")
     title = f'{dataset}_{metric}_RQ1_{batch_size}_{annotator_query_strategies[0]}_{learning_strategies[0]}'
-    output_path = f'{OUTPUT_PATH}/{dataset}_plot/{title}.pdf'
+    output_path = f'{OUTPUT_PATH}/presentation/{dataset}_plot/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
 
 
@@ -91,8 +77,8 @@ def eval_RQ2(
         batch_size,
         metric,
 ):
-    plt.figure(figsize=(11, 5))
-    plt.rcParams['font.size'] = 15
+    plt.figure(figsize=(7, 6))
+    plt.rcParams['font.size'] = 12
     for idx_l, learning_strategy in enumerate(learning_strategies):
         mean_learning_strategy = []
         std_learning_strategy = []
@@ -120,13 +106,13 @@ def eval_RQ2(
         plt.plot(np.arange(init_batch_size, len(mean_a) * batch_size + init_batch_size, batch_size),
                      mean_a, label=f"({np.mean(mean_a):.4f}) {learning_strategy}", alpha=0.3)
 
-    plt.legend(bbox_to_anchor=(0.5, -0.5), loc='lower center', ncol=2)
+    plt.legend(bbox_to_anchor=(0.5, -0.3), loc='lower center', ncol=2)
     plt.tight_layout()
     plt.xlabel('# Annotation queried')
     metric_name = 'Erroneous Annotation Rate' if metric == 'error_annotation_rate' else 'Misclassification Rate'
     plt.ylabel(f"{metric_name}")
     title = f'{dataset}_{metric}_RQ2_{batch_size}_{instance_query_strategies[0]}_{annotator_query_strategies[0]}'
-    output_path = f'{OUTPUT_PATH}/{dataset}_plot/{title}.pdf'
+    output_path = f'{OUTPUT_PATH}/presentation/{dataset}_plot/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
 
 
@@ -139,8 +125,8 @@ def eval_RQ3(
         batch_size,
         metric,
 ):
-    plt.figure(figsize=(13, 5))
-    plt.rcParams['font.size'] = 14
+    plt.figure(figsize=(7, 5))
+    plt.rcParams['font.size'] = 12
     for idx_l, learning_strategy in enumerate(learning_strategies):
         for idx_a, annotator_query_strategy in enumerate(annotator_query_strategies):
             for idx_i, instance_query_strategy in enumerate(instance_query_strategies):
@@ -167,7 +153,7 @@ def eval_RQ3(
     metric_name = 'Erroneous Annotation Rate' if metric == 'error_annotation_rate' else 'Misclassification Rate'
     plt.ylabel(f"{metric_name}")
     title = f'{dataset}_{metric}_RQ3_{batch_size}_{instance_query_strategies[0]}'
-    output_path = f'{OUTPUT_PATH}/{dataset}_plot/{title}.pdf'
+    output_path = f'{OUTPUT_PATH}/presentation/{dataset}_plot/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
 
 
@@ -180,8 +166,8 @@ def eval_RQ4(
         batch_size,
         metric,
 ):
-    plt.figure(figsize=(11, 5))
-    plt.rcParams['font.size'] = 15
+    plt.figure(figsize=(7, 6))
+    plt.rcParams['font.size'] = 12
     for idx_n, n_annotator_per_instance in enumerate(n_annotator_list):
         mean_n_annotator = []
         std_n_annotator = []
@@ -207,7 +193,7 @@ def eval_RQ4(
         mean_a, std_a = get_mean_std(mean_n_annotator, std_n_annotator)
         init_batch_size = get_init_batch_size(dataset, batch_size)
         plt.plot(np.arange(init_batch_size, len(mean_a) * batch_size + init_batch_size, batch_size),
-                 mean_a, label=f"({np.mean(mean_a):.4f}) # Annotations per Instance: {n_annotator_per_instance}", alpha=0.3)
+                 mean_a, label=f"({np.mean(mean_a):.4f}) {n_annotator_per_instance}", alpha=0.3)
 
     plt.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', ncol=2)
     plt.tight_layout()
@@ -215,7 +201,7 @@ def eval_RQ4(
     metric_name = 'Erroneous Annotation Rate' if metric == 'error_annotation_rate' else 'Misclassification Rate'
     plt.ylabel(f"{metric_name}")
     title = f'{dataset}_{metric}_RQ4_{batch_size}'
-    output_path = f'{OUTPUT_PATH}/{dataset}_plot/{title}.pdf'
+    output_path = f'{OUTPUT_PATH}/presentation/{dataset}_plot/{title}.pdf'
     plt.savefig(output_path, bbox_inches="tight")
 
 
@@ -229,7 +215,7 @@ if __name__ == '__main__':
     annotator_query_strategies = ['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
     learning_strategies = ['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w']
 
-    dataset = 'agnews'
+    dataset = 'letter'
     question = 'RQ4'
     metric = 'misclassification'
     batch_size_dict = {
@@ -252,7 +238,7 @@ if __name__ == '__main__':
     elif question == 'RQ2':
         eval_RQ2(
             dataset=dataset,
-            instance_query_strategies=['typiclust'],
+            instance_query_strategies=['random'],
             annotator_query_strategies=['random'],
             learning_strategies=['majority-vote', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
             n_annotator_list=[1],
@@ -262,7 +248,7 @@ if __name__ == '__main__':
     elif question == 'RQ3':
         eval_RQ3(
             dataset=dataset,
-            instance_query_strategies=['typiclust'],
+            instance_query_strategies=['uncertainty'],
             annotator_query_strategies=['random', 'round-robin', 'trace-reg', 'geo-reg-f', 'geo-reg-w'],
             learning_strategies=['trace-reg', 'geo-reg-f', 'geo-reg-w'],
             n_annotator_list=[1],
@@ -272,9 +258,9 @@ if __name__ == '__main__':
     elif question == 'RQ4':
         eval_RQ4(
             dataset=dataset,
-            instance_query_strategies=['typiclust'],
-            annotator_query_strategies=['geo-reg-f'],
-            learning_strategies=['geo-reg-f'],
+            instance_query_strategies=['uncertainty'],
+            annotator_query_strategies=['trace-reg'],
+            learning_strategies=['trace-reg'],
             n_annotator_list=[1, 2, 3],
             batch_size=batch_size,
             metric=metric,
