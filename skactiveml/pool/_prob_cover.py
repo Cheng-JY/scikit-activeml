@@ -6,6 +6,9 @@ suited for low budgets.
 import numpy as np
 import warnings
 
+
+from copy import deepcopy
+from inspect import signature
 from sklearn.metrics import pairwise_distances
 from sklearn.cluster import KMeans
 from sklearn.utils.validation import column_or_1d
@@ -19,10 +22,10 @@ from ..utils import (
 
 
 class ProbCover(SingleAnnotatorPoolQueryStrategy):
-    """Probability Coverage
+    """Probability Coverage (ProbCover)
 
     This class implements the Probability Coverage (ProbCover) query strategy
-    [1], which aims at maximizing the probability coverage in a meaningful
+    [1]_, which aims at maximizing the probability coverage in a meaningful
     sample embedding space.
 
     Parameters
@@ -58,8 +61,8 @@ class ProbCover(SingleAnnotatorPoolQueryStrategy):
 
     References
     ----------
-    .. [1] Yehuda, Ofer, Avihu Dekel, Guy Hacohen, and Daphna Weinshall.
-       "Active Learning Through a Covering Lens." NeurIPS, 2022.
+    .. [1] O. Yehuda, A. Dekel, G. Hacohen, and D. Weinshall. Active Learning
+       Through a Covering Lens. In Adv. Neural Inf. Process. Syst., 2022.
     """
 
     def __init__(
@@ -94,46 +97,41 @@ class ProbCover(SingleAnnotatorPoolQueryStrategy):
         return_utilities=False,
         update=False,
     ):
-        """Query the next samples to be labeled
+        """Determines for which candidate samples labels are to be queried.
 
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
-            Training data set, usually complete, i.e. including the labeled and
-            unlabeled samples.
+            Training data set, usually complete, i.e., including the labeled
+            and unlabeled samples.
         y : array-like of shape (n_samples,)
             Labels of the training data set (possibly including unlabeled ones
-            indicated by self.missing_label).
-        candidates : None or array-like of shape (n_candidates) with \
-                dtype=int, default=None
-            If `candidates` is None, the unlabeled samples from `(X, y)`
-            are considered as candidates.
-            If `candidates` is of shape `(n_candidates,)` and of type int,
-            `candidates` is considered as a list of the indices of the samples
-            in `(X, y)`.
+            indicated by `self.missing_label`).
+        candidates : None or array-like of shape (n_candidates), dtype=int or \
+                array-like of shape (n_candidates, n_features), default=None
+            - If `candidates` is `None`, the unlabeled samples from
+              `(X,y)` are considered as `candidates`.
+            - If `candidates` is of shape `(n_candidates,)` and of type
+              `int`, `candidates` is considered as the indices of the
+              samples in `(X,y)`.
         batch_size : int, default=1
             The number of samples to be selected in one AL cycle.
         return_utilities : bool, default=False
-            If True, also return the utilities based on the query strategy.
-        update : bool, default=False
-            This boolean flag determines whether the computed `delta_max_`
-            and the `distances_` shall be updated in the `query`. For the first
-            call of `query`, this parameter has no impact because both
-            quantities are computed for the first time.
+            If `True`, also return the utilities based on the query strategy.
 
         Returns
-        ----------
-        query_indices : numpy.ndarray of shape (batch_size,)
-            The `query_indices` indicate for which candidate sample a label is
+        -------
+        query_indices : numpy.ndarray of shape (batch_size)
+            The query indices indicate for which candidate sample a label is
             to be queried, e.g., `query_indices[0]` indicates the first
-            selected sample.
-            If `candidates` in `None` or of shape `(n_candidates,)`, the
-            indexing refers to samples in `X`.
-        utilities : numpy.ndarray of shape (batch_size, n_samples)
-            The utilities of samples for selecting each sample of the batch.
-            Here, utilities mean the out-degree of the candidate samples.
-            If `candidates` is `None` or of shape `(n_candidates,)`, the
-            indexing refers to the samples in `X`.
+            selected sample. The indexing refers to the samples in `X`.
+        utilities : numpy.ndarray of shape (batch_size, n_samples) or \
+                numpy.ndarray of shape (batch_size, n_candidates)
+            The utilities of samples after each selected sample of the batch,
+            e.g., `utilities[0]` indicates the utilities used for selecting
+            the first sample (with index `query_indices[0]`) of the batch.
+            Utilities for labeled samples will be set to np.nan. The indexing
+            refers to the samples in `X`.
         """
         # Check parameters.
         X, y, candidates, batch_size, return_utilities = self._validate_data(
@@ -178,12 +176,19 @@ class ProbCover(SingleAnnotatorPoolQueryStrategy):
                 "Pass a dictionary with corresponding parameter names and "
                 "values according to the `init` function of `cluster_algo`."
             )
+        check_scalar(update, name="update", target_type=bool)
         cluster_algo_dict = (
             {}
             if self.cluster_algo_dict is None
             else self.cluster_algo_dict.copy()
         )
-        check_scalar(update, name="update", target_type=bool)
+
+        # Optionally, set random state.
+        cluster_algo_sig = signature(self.cluster_algo.__init__).parameters
+        algo_has_seed = "random_state" in cluster_algo_sig
+        dict_lacks_seed = "random_state" not in cluster_algo_dict
+        if self.random_state is not None and algo_has_seed and dict_lacks_seed:
+            cluster_algo_dict["random_state"] = deepcopy(self.random_state)
 
         if update or not hasattr(self, "delta_max_"):
             # Compute distances between each pair of observed samples.

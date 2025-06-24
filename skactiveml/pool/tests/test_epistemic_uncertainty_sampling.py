@@ -272,7 +272,7 @@ class TestEpistemicUncertaintySampling(
             **self.kwargs,
             clf=clf,
             return_utilities=True,
-            sample_weight=[0.5, 1, 1, 1]
+            sample_weight=[0.5, 1, 1, 1],
         )
         comp = utilities_s == utilities
         self.assertTrue(not comp.all())

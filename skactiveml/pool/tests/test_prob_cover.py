@@ -17,13 +17,18 @@ class TestProbCover(
 ):
     def setUp(self):
         query_default_params_clf = {
-            "X": np.linspace(0, 1, 20).reshape(10, 2),
-            "y": np.hstack([[0, 1], np.full(8, MISSING_LABEL)]),
+            "X": np.random.RandomState(0).uniform(
+                size=(1000, 10), low=-0.5, high=0.5
+            ),
+            "y": np.hstack([[0, 1], np.full(998, MISSING_LABEL)]),
         }
-        cluster_dict = {"random_state": 0, "n_init": 1}
         super().setUp(
             qs_class=ProbCover,
-            init_default_params={"cluster_algo_dict": cluster_dict},
+            init_default_params={
+                "random_state": 0,
+                "deltas": np.linspace(0.2, 2.2, 100),
+                "cluster_algo_dict": {"n_init": 10},
+            },
             query_default_params_clf=query_default_params_clf,
         )
 

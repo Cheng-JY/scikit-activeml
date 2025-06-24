@@ -1,0 +1,65 @@
+[build-system]
+requires = [
+    "setuptools>=69",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name            = "scikit-activeml"
+description     = "scikit-activeml is a Python library for active learning on top of SciPy and scikit-learn."
+readme          = { file = "README.rst", content-type = "text/x-rst" }
+requires-python = ">=3.9"
+license-files   = ["LICENSE.txt"]
+maintainers     = [
+  { name = "Marek Herde", email = "marek.herde@uni-kassel.de" },
+]
+keywords = [
+  "active learning",
+  "machine learning",
+  "semi-supervised learning",
+  "data mining",
+  "pattern recognition",
+  "artificial intelligence",
+]
+classifiers = [
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+]
+
+dynamic = [
+  "version",
+  "dependencies",
+  "optional-dependencies",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "skactiveml.__version__" }
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.dynamic.optional-dependencies]
+dev = { file = ["requirements_extra.txt"] }
+max = { file = ["requirements_max.txt"] }
+
+[tool.setuptools.packages.find]
+include = ["skactiveml", "skactiveml.*"]
+exclude = [
+  "skactiveml.tests",
+  "skactiveml.*.tests",
+  "skactiveml.*.tests.*",
+]
+
+[project.urls]
+Homepage       = "https://scikit-activeml.github.io"
+Source         = "https://github.com/scikit-activeml/scikit-activeml"
+
+[tool.black]
+line-length = 79
+target-version = ['py311']
+include = '\.pyi?$'

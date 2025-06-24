@@ -200,7 +200,7 @@ class TestFeatureSpace(unittest.TestCase):
             X=self.X,
             y=self.y,
             **self.qs_dict,
-            feature_bound=self.bound
+            feature_bound=self.bound,
         )
 
     def test__general_plot_utilities_param_X(self):
@@ -211,7 +211,7 @@ class TestFeatureSpace(unittest.TestCase):
             X=np.ones([len(self.X), 3]),
             y=self.y,
             **self.qs_dict,
-            feature_bound=self.bound
+            feature_bound=self.bound,
         )
 
     def test__general_plot_utilities_param_y(self):
@@ -222,7 +222,7 @@ class TestFeatureSpace(unittest.TestCase):
             X=self.X,
             y=np.zeros(len(self.y) + 1),
             **self.qs_dict,
-            feature_bound=self.bound
+            feature_bound=self.bound,
         )
 
     def test__general_plot_utilities_param_candidates(self):
@@ -233,7 +233,7 @@ class TestFeatureSpace(unittest.TestCase):
             X=self.X,
             y=self.y,
             **self.qs_dict,
-            candidates=[100]
+            candidates=[100],
         )
         _general_plot_utilities(
             qs=self.qs, X=self.X, y=self.y, **self.qs_dict, candidates=[99]
@@ -247,7 +247,7 @@ class TestFeatureSpace(unittest.TestCase):
             candidates=[1],
             **self.qs_dict,
             replace_nan=None,
-            feature_bound=self.bound
+            feature_bound=self.bound,
         )
 
     def test__general_plot_utilities_param_plot_annotators(self):
@@ -258,7 +258,7 @@ class TestFeatureSpace(unittest.TestCase):
             X=self.X,
             y=self.y,
             **self.qs_dict,
-            plot_annotators=[4]
+            plot_annotators=[4],
         )
         _, axes = plt.subplots(1, 2)
         self.assertRaises(
@@ -269,7 +269,7 @@ class TestFeatureSpace(unittest.TestCase):
             y=self.y_active_multi,
             **self.qs_dict,
             plot_annotators=[4],
-            axes=axes
+            axes=axes,
         )
 
     def test__general_plot_utilities_param_ignore_undefined_query_params(self):
@@ -279,7 +279,7 @@ class TestFeatureSpace(unittest.TestCase):
             y=self.y_active,
             **self.qs_dict,
             ignore_undefined_query_params=True,
-            feature_bound=self.bound
+            feature_bound=self.bound,
         )
         _general_plot_utilities(
             qs=self.qs,
@@ -288,7 +288,7 @@ class TestFeatureSpace(unittest.TestCase):
             candidates=None,
             **self.qs_dict,
             ignore_undefined_query_params=True,
-            feature_bound=self.bound
+            feature_bound=self.bound,
         )
         _general_plot_utilities(
             qs=self.qs,
@@ -297,7 +297,7 @@ class TestFeatureSpace(unittest.TestCase):
             candidates=[1],
             **self.qs_dict,
             ignore_undefined_query_params=True,
-            feature_bound=self.bound
+            feature_bound=self.bound,
         )
 
     def test__general_plot_utilities_param_res(self):
@@ -309,7 +309,7 @@ class TestFeatureSpace(unittest.TestCase):
             y=self.y_active,
             **self.qs_dict,
             feature_bound=self.bound,
-            res=-3
+            res=-3,
         )
 
     def test__general_plot_utilities_param_ax(self):
@@ -321,7 +321,7 @@ class TestFeatureSpace(unittest.TestCase):
             y=self.y_active,
             **self.qs_dict,
             feature_bound=self.bound,
-            ax=2
+            ax=2,
         )
         _, axes = plt.subplots(1, 2)
         self.assertRaises(
@@ -332,7 +332,7 @@ class TestFeatureSpace(unittest.TestCase):
             y=self.y_active_multi,
             **self.qs_dict,
             feature_bound=self.bound,
-            ax=axes
+            ax=axes,
         )
 
     def test__general_plot_utilities_param_axes(self):
@@ -344,7 +344,7 @@ class TestFeatureSpace(unittest.TestCase):
             y=self.y_active,
             **self.qs_dict,
             feature_bound=self.bound,
-            axes=2
+            axes=2,
         )
 
     def test__general_plot_utilities_param_contour_dict(self):
@@ -356,7 +356,7 @@ class TestFeatureSpace(unittest.TestCase):
             y=self.y_active,
             **self.qs_dict,
             feature_bound=self.bound,
-            contour_dict="string"
+            contour_dict="string",
         )
         _general_plot_utilities(
             qs=self.qs,
@@ -364,7 +364,7 @@ class TestFeatureSpace(unittest.TestCase):
             X=self.X,
             y=self.y,
             feature_bound=self.bound,
-            contour_dict={"linestyles": "."}
+            contour_dict={"linestyles": "."},
         )
 
     # Tests for plot_stream_decision_boundary function
@@ -779,7 +779,7 @@ class TestFeatureSpace(unittest.TestCase):
             y=self.y_train,
             **self.qs_dict,
             candidates=self.X_cand,
-            ax=ax
+            ax=ax,
         )
         ax.scatter(self.X[:, 0], self.X[:, 1], c="k", marker=".")
         ax.scatter(
@@ -852,7 +852,7 @@ class TestFeatureSpace(unittest.TestCase):
             X=self.X_train,
             y=self.y_train,
             candidates=self.X_cand,
-            ax=ax
+            ax=ax,
         )
         ax.scatter(self.X[:, 0], self.X[:, 1], c="k", marker=".")
         ax.scatter(

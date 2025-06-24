@@ -14,17 +14,23 @@ class TestTypiClust(
 ):
     def setUp(self):
         query_default_params_clf = {
-            "X": np.linspace(0, 1, 20).reshape(10, 2),
-            "y": np.hstack([[0, 1], np.full(8, MISSING_LABEL)]),
+            "X": np.random.RandomState(0).uniform(
+                size=(1000, 10), low=-0.5, high=0.5
+            ),
+            "y": np.hstack([[0, 1], np.full(998, MISSING_LABEL)]),
         }
         query_default_params_reg = {
-            "X": np.linspace(0, 1, 20).reshape(10, 2),
-            "y": np.hstack([[1.1, 2.1], np.full(8, MISSING_LABEL)]),
+            "X": np.random.RandomState(0).uniform(
+                size=(1000, 10), low=-0.5, high=0.5
+            ),
+            "y": np.hstack([[1.1, 2.1], np.full(998, MISSING_LABEL)]),
         }
-        cluster_dict = {"random_state": 0, "n_init": 1}
         super().setUp(
             qs_class=TypiClust,
-            init_default_params={"cluster_algo_dict": cluster_dict},
+            init_default_params={
+                "random_state": 0,
+                "cluster_algo_dict": {"n_init": 1},
+            },
             query_default_params_clf=query_default_params_clf,
             query_default_params_reg=query_default_params_reg,
         )
@@ -128,3 +134,9 @@ class TestTypiClust(
                     self.assertTrue(np.isneginf(i))
         self.assertEqual(10, utilities_4.shape[1])
         self.assertEqual(1, utilities_4.shape[0])
+
+        # test case 5: duplicate samples
+        typi_clust_1 = TypiClust(random_state=0, k=3)
+        X_dup = X[[1, 2, 0, 0, 0, 0, 0, 0, 0, 0]]
+        y_dup = [0, 1] + [np.nan] * (len(X_dup) - 2)
+        typi_clust_1.query(X_dup, y_dup, batch_size=5, return_utilities=True)
